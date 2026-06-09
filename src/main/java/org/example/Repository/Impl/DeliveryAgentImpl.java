@@ -10,11 +10,11 @@ import org.example.Repository.DeliveryAgentRepository;
 import org.example.config.DBManager;
 import org.example.model.DeliveryAgent;
 
-public class DeliveryAgentimpl implements DeliveryAgentRepository {
+public class DeliveryAgentImpl implements DeliveryAgentRepository {
 
     private final MongoCollection<Document> collection;
 
-    public DeliveryAgentimpl() {
+    public DeliveryAgentImpl() {
         MongoDatabase db = DBManager.getDatabase();
         this.collection = db.getCollection("delivery_agents");
     }

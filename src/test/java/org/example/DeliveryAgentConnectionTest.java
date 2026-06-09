@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.Repository.Impl.DeliveryAgentimpl;
+import org.example.Repository.Impl.DeliveryAgentImpl;
 import org.example.model.DeliveryAgent;
 import org.junit.jupiter.api.*;
 
@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DeliveryAgentConnectionTest {
 
-    private static DeliveryAgentimpl repo;
+    private static DeliveryAgentImpl repo;
     private static String testMongoId;
 
     @BeforeAll
     static void setup() {
-        repo = new DeliveryAgentimpl();
+        repo = new DeliveryAgentImpl();
     }
 
     @Test
