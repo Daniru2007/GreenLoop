@@ -10,6 +10,7 @@ public class CustomerOrder {
     public static final String STATUS_PROCESSING = "PROCESSING";
     public static final String STATUS_DELIVERED  = "DELIVERED";
     public static final String STATUS_CANCELLED  = "CANCELLED";
+    public static final String STATUS_DISPATCH   = "DISPATCHED";
 
     private String mongoId;
     private String productId;
@@ -23,6 +24,7 @@ public class CustomerOrder {
     private String deliveryAgentId;
 
     public CustomerOrder() {}
+
 
     public CustomerOrder(String productId, String productName, int quantityOrdered,
                          double unitPrice, String customerName, LocalDate orderDate,
