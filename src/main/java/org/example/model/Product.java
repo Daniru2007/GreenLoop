@@ -10,7 +10,7 @@ public class Product {
     private int stockQuantity;
     private String unit;        // e.g. kg, pack, roll
     private String supplierName;
-    private int reorderLevel;   // low-stock alert triggers below this
+    private int reorderLevel;   // -stock alert triggers beloloww this
 
     public Product() {}
 
@@ -26,6 +26,7 @@ public class Product {
         this.supplierName = supplierName;
         this.reorderLevel = reorderLevel;
     }
+
 
     public String getMongoId()                       { return mongoId; }
     public void setMongoId(String mongoId)           { this.mongoId = mongoId; }

@@ -104,7 +104,7 @@ public class EmailServiceImpl implements EmailServiceRepository {
                         <tr>
                             <td style="padding: 30px; text-align: center; background-color: #224a37; color: #ffffff; ">
                                 <img src=%s alt="" width="100" height="100"`>
-                                <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">Green Loop</h1>
+                                <h1 style="margin: 0; font-size: 15px; letter-spacing: 1px;">Green Loop</h1>
                             </td>
                         </tr>
                 
@@ -158,10 +158,11 @@ public class EmailServiceImpl implements EmailServiceRepository {
                 customerOrder.getQuantityOrdered(),
                 customerOrder.getTotalAmount(),
                 customerOrder.getCustomerName(),
-                "CustomerEmail",
-                "CustomerAddress",
-                "CustomerPhone"
+                "testemail@gmail.com",
+                "No. 123, Main Street, Colombo",
+                "0712345678"
         );
+
 
         customerOrder.setStatus(customerOrder.STATUS_DISPATCH);
 

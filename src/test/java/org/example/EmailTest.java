@@ -25,11 +25,12 @@ public class EmailTest {
    @Test
    public void testEmailForDeliveryAgent(){
        String sendersEmail = "sithijahiripitiya16@gmail.com";
-         String recepientEmail = "sithijahiripitiya16@gmail.com";
+         String recepientEmail = "daniruidk@gmail.com";
          CustomerOrder customerOrder = new CustomerOrder();
        customerOrder.setProductName("Test Product");
        customerOrder.setQuantityOrdered(2);
        customerOrder.setTotalAmount(39.98);
+
          emailServiceRepository.sendEmailForDeliveryAgent(sendersEmail, recepientEmail, customerOrder);
 
    }

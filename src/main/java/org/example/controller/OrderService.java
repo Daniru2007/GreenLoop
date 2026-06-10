@@ -98,7 +98,7 @@ public class OrderService {
 
                 // Notify Client (mock email)
                 String clientEmail = customerName.toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                emailService.sendEmailForClient(clientEmail);
+                emailService.sendEmailForClient(clientEmail, "sithijahiripitiya16@gmail.com",order);
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {
@@ -154,8 +154,8 @@ public class OrderService {
             if (updatedOrder != null && updatedAgent != null) {
                 // Notify both
                 String clientEmail = order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                emailService.sendEmailForClient(clientEmail);
-                emailService.sendEmailForDeliveryAgent(agent.getEmail());
+                emailService.sendEmailForClient(clientEmail, "sithijahiripitiya16@gmail.com", order);
+                emailService.sendEmailForDeliveryAgent(agent.getEmail(), "sithijahiripitiya16@gmail.com", order);
 
                 System.out.println("[OrderService] Agent " + agent.getName() + " assigned to order " + orderId);
                 return true;
@@ -204,7 +204,7 @@ public class OrderService {
 
             if (updatedOrder != null) {
                 String clientEmail = order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                emailService.sendEmailForClient(clientEmail);
+                emailService.sendEmailForClient(clientEmail, "sithijahiripitiya16@gmail.com", order);
                 System.out.println("[OrderService] Order " + orderId + " delivered successfully!");
                 return true;
             }
