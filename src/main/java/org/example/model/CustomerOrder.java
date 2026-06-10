@@ -21,6 +21,7 @@ public class CustomerOrder {
     private LocalDate orderDate;
     private String status;
     private String deliveryAgentId;
+    private String supplierName;
 
     public CustomerOrder() {}
 
@@ -68,6 +69,9 @@ public class CustomerOrder {
     public String getDeliveryAgentId()                   { return deliveryAgentId; }
     public void setDeliveryAgentId(String id)            { this.deliveryAgentId = id; }
 
+    public String getSupplierName()                      { return supplierName; }
+    public void setSupplierName(String supplierName)    { this.supplierName = supplierName; }
+
     public boolean isDelivered() {
         return STATUS_DELIVERED.equals(this.status);
     }
@@ -75,8 +79,8 @@ public class CustomerOrder {
     @Override
     public String toString() {
         return String.format(
-                "Order{product='%s', customer='%s', qty=%d, total=%.2f, date=%s, status='%s'}",
-                productName, customerName, quantityOrdered, totalAmount, orderDate, status
+                "Order{product='%s', customer='%s', qty=%d, total=%.2f, date=%s, status='%s', supplier='%s'}",
+                productName, customerName, quantityOrdered, totalAmount, orderDate, status, supplierName
         );
     }
 }
