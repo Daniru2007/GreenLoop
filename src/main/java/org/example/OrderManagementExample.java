@@ -7,6 +7,7 @@ import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.Product;
 
+import javax.swing.SwingUtilities;
 import java.time.LocalDate;
 
 /**
@@ -14,6 +15,14 @@ import java.time.LocalDate;
  */
 public class OrderManagementExample {
     public static void main(String[] args) {
+        if (args.length == 0 || !"cli".equalsIgnoreCase(args[0])) {
+            System.out.println("Launching GUI Interface... (Pass 'cli' as an argument to run the console flow instead)");
+            SwingUtilities.invokeLater(() -> {
+                new OrderManagementGUI().setVisible(true);
+            });
+            return;
+        }
+
         System.out.println("=====================================================================");
         System.out.println("                GREENLOOP ORDER & DELIVERY SYSTEM                    ");
         System.out.println("=====================================================================");
