@@ -31,6 +31,7 @@ public class DBManager {
         if (mongoClient == null) {
             String uri = properties.getProperty("mongodb.uri");
             String dbName = properties.getProperty("mongodb.database");
+            System.out.println(uri);
 
             mongoClient = MongoClients.create(uri);
             database = mongoClient.getDatabase(dbName);
