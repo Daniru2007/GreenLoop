@@ -26,12 +26,9 @@ public class ProductManagementPanel extends JPanel {
     private JTextField txtProdUnit;
     private JTextField txtProdSupplier;
     private JTextField txtProdReorderLevel;
-    private JButton btnAddProduct;
 
     private JTable tableProducts;
     private DefaultTableModel modelProducts;
-    private JButton btnDeleteProduct;
-    private JButton btnRefreshProducts;
 
     public ProductManagementPanel(ProductController productController, Runnable refreshCallback) {
         this.productController = productController;
@@ -135,18 +132,13 @@ public class ProductManagementPanel extends JPanel {
         // Row 8: Add Product Button
         gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.weightx = 1.0;
         gbc.insets = new Insets(15, 8, 8, 8);
-        btnAddProduct = new JButton("Register Product");
+        JButton btnAddProduct = new JButton("Register Product");
         btnAddProduct.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAddProduct.setBackground(new Color(46, 111, 64));
         btnAddProduct.setForeground(Color.WHITE);
         btnAddProduct.putClientProperty("JButton.buttonType", "roundRect");
         btnAddProduct.putClientProperty("JButton.boldText", true);
-        btnAddProduct.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleAddProduct();
-            }
-        });
+        btnAddProduct.addActionListener(e -> handleAddProduct());
         formPanel.add(btnAddProduct, gbc);
 
         add(formPanel, BorderLayout.WEST);
@@ -176,28 +168,18 @@ public class ProductManagementPanel extends JPanel {
         // Bottom Actions
         JPanel actionToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
 
-        btnDeleteProduct = new JButton("Delete Product");
+        JButton btnDeleteProduct = new JButton("Delete Product");
         btnDeleteProduct.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnDeleteProduct.setBackground(new Color(160, 50, 50));
         btnDeleteProduct.setForeground(Color.WHITE);
         btnDeleteProduct.putClientProperty("JButton.buttonType", "roundRect");
-        btnDeleteProduct.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleDeleteProduct();
-            }
-        });
+        btnDeleteProduct.addActionListener(e -> handleDeleteProduct());
         actionToolbar.add(btnDeleteProduct);
 
-        btnRefreshProducts = new JButton("Refresh");
+        JButton btnRefreshProducts = new JButton("Refresh");
         btnRefreshProducts.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnRefreshProducts.putClientProperty("JButton.buttonType", "roundRect");
-        btnRefreshProducts.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refreshCallback.run();
-            }
-        });
+        btnRefreshProducts.addActionListener(e -> refreshCallback.run());
         actionToolbar.add(btnRefreshProducts);
 
         tablePanel.add(actionToolbar, BorderLayout.SOUTH);

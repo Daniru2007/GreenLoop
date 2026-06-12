@@ -39,19 +39,12 @@ public class OrderProcessingPanel extends JPanel {
     private JLabel lblUnitPrice;
     private JLabel lblTotalAmount;
     private JLabel lblStockAvailable;
-    private JButton btnPlaceOrder;
-
-    private JButton btnAddToCart;
     private JTable tableCart;
     private DefaultTableModel modelCart;
-    private JButton btnRemoveFromCart;
     private JLabel lblCartTotal;
 
     private JTable tableOrders;
     private DefaultTableModel modelOrders;
-    private JButton btnCancelOrder;
-    private JButton btnCompleteDelivery;
-    private JButton btnRefreshOrders;
 
     public OrderProcessingPanel(OrderService orderService, ProductController productController, Runnable refreshCallback) {
         this.orderService = orderService;
@@ -120,12 +113,7 @@ public class OrderProcessingPanel extends JPanel {
         comboProducts = new JComboBox<>();
         comboProducts.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         comboProducts.putClientProperty("JComponent.roundRect", true);
-        comboProducts.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateCalculations();
-            }
-        });
+        comboProducts.addActionListener(e -> updateCalculations());
         formPanel.add(comboProducts, gbc);
 
         // Row 5: Quantity
@@ -135,12 +123,7 @@ public class OrderProcessingPanel extends JPanel {
         spinQuantity = new JSpinner(new SpinnerNumberModel(1, 1, 1000, 1));
         spinQuantity.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         spinQuantity.putClientProperty("JComponent.roundRect", true);
-        spinQuantity.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                updateCalculations();
-            }
-        });
+        spinQuantity.addChangeListener(e -> updateCalculations());
         formPanel.add(spinQuantity, gbc);
 
         // Row 6: Available Stock
@@ -171,18 +154,13 @@ public class OrderProcessingPanel extends JPanel {
         // Row 9: Add to Cart Button
         gbc.gridx = 0; gbc.gridy = 9; gbc.gridwidth = 2; gbc.weightx = 1.0;
         gbc.insets = new Insets(10, 8, 10, 8);
-        btnAddToCart = new JButton("Add to Cart");
+        JButton btnAddToCart = new JButton("Add to Cart");
         btnAddToCart.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnAddToCart.setBackground(new Color(40, 140, 80));
         btnAddToCart.setForeground(Color.WHITE);
         btnAddToCart.setFocusPainted(false);
         btnAddToCart.putClientProperty("JButton.buttonType", "roundRect");
-        btnAddToCart.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleAddToCart();
-            }
-        });
+        btnAddToCart.addActionListener(e -> handleAddToCart());
         formPanel.add(btnAddToCart, gbc);
 
         // Row 10: Cart Table
@@ -212,17 +190,12 @@ public class OrderProcessingPanel extends JPanel {
         JPanel cartControlPanel = new JPanel(new BorderLayout(5, 5));
         cartControlPanel.setOpaque(false);
 
-        btnRemoveFromCart = new JButton("Remove Selected");
+        JButton btnRemoveFromCart = new JButton("Remove Selected");
         btnRemoveFromCart.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnRemoveFromCart.setBackground(new Color(160, 50, 50));
         btnRemoveFromCart.setForeground(Color.WHITE);
         btnRemoveFromCart.putClientProperty("JButton.buttonType", "roundRect");
-        btnRemoveFromCart.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleRemoveFromCart();
-            }
-        });
+        btnRemoveFromCart.addActionListener(e -> handleRemoveFromCart());
         cartControlPanel.add(btnRemoveFromCart, BorderLayout.WEST);
 
         lblCartTotal = new JLabel("Order Total: Rs. 0.00");
@@ -236,19 +209,14 @@ public class OrderProcessingPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 12; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(15, 8, 8, 8);
-        btnPlaceOrder = new JButton("Place Client Order");
+        JButton btnPlaceOrder = new JButton("Place Client Order");
         btnPlaceOrder.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnPlaceOrder.setBackground(new Color(46, 111, 64));
         btnPlaceOrder.setForeground(Color.WHITE);
         btnPlaceOrder.setFocusPainted(false);
         btnPlaceOrder.putClientProperty("JButton.buttonType", "roundRect");
         btnPlaceOrder.putClientProperty("JButton.boldText", true);
-        btnPlaceOrder.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handlePlaceOrder();
-            }
-        });
+        btnPlaceOrder.addActionListener(e -> handlePlaceOrder());
         formPanel.add(btnPlaceOrder, gbc);
 
         add(formPanel, BorderLayout.WEST);
@@ -271,7 +239,7 @@ public class OrderProcessingPanel extends JPanel {
             public String getToolTipText(MouseEvent e) {
                 int row = rowAtPoint(e.getPoint());
                 if (row >= 0) {
-                    return "Click to view order details and products";
+                    return "Double-click to view order details and products";
                 }
                 return super.getToolTipText(e);
             }
@@ -282,28 +250,17 @@ public class OrderProcessingPanel extends JPanel {
         tableOrders.setShowVerticalLines(false);
         tableOrders.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
 
-        // Click listener on any column/row to show order items dialog
+        // Click listener on any column/row to show order items dialog on double-click
         tableOrders.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int row = tableOrders.rowAtPoint(e.getPoint());
-                if (row >= 0) {
-                    int modelRow = tableOrders.convertRowIndexToModel(row);
-                    String orderId = (String) modelOrders.getValueAt(modelRow, 0);
-                    showOrderItemsDialog(orderId);
-                }
-            }
-        });
-
-        // Hover cursor effect to indicate clickability
-        tableOrders.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                int row = tableOrders.rowAtPoint(e.getPoint());
-                if (row >= 0) {
-                    tableOrders.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                } else {
-                    tableOrders.setCursor(Cursor.getDefaultCursor());
+                if (e.getClickCount() == 2) {
+                    int row = tableOrders.rowAtPoint(e.getPoint());
+                    if (row >= 0) {
+                        int modelRow = tableOrders.convertRowIndexToModel(row);
+                        String orderId = (String) modelOrders.getValueAt(modelRow, 0);
+                        showOrderItemsDialog(orderId);
+                    }
                 }
             }
         });
@@ -314,44 +271,40 @@ public class OrderProcessingPanel extends JPanel {
         // Bottom Actions Toolbar
         JPanel actionToolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
  
-        btnCompleteDelivery = new JButton("Complete Delivery");
+        JButton btnCompleteDelivery = new JButton("Complete Delivery");
         btnCompleteDelivery.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnCompleteDelivery.setBackground(new Color(30, 100, 160));
         btnCompleteDelivery.setForeground(Color.WHITE);
         btnCompleteDelivery.putClientProperty("JButton.buttonType", "roundRect");
-        btnCompleteDelivery.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleCompleteDelivery();
-            }
-        });
+        btnCompleteDelivery.addActionListener(e -> handleCompleteDelivery());
         actionToolbar.add(btnCompleteDelivery);
  
-        btnCancelOrder = new JButton("Cancel Order");
+        JButton btnCancelOrder = new JButton("Cancel Order");
         btnCancelOrder.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnCancelOrder.setBackground(new Color(160, 50, 50));
         btnCancelOrder.setForeground(Color.WHITE);
         btnCancelOrder.putClientProperty("JButton.buttonType", "roundRect");
-        btnCancelOrder.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleCancelOrder();
-            }
-        });
+        btnCancelOrder.addActionListener(e -> handleCancelOrder());
         actionToolbar.add(btnCancelOrder);
  
-        btnRefreshOrders = new JButton("Refresh");
+        JButton btnRefreshOrders = new JButton("Refresh");
         btnRefreshOrders.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnRefreshOrders.putClientProperty("JButton.buttonType", "roundRect");
-        btnRefreshOrders.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refreshCallback.run();
-            }
-        });
+        btnRefreshOrders.addActionListener(e -> refreshCallback.run());
         actionToolbar.add(btnRefreshOrders);
 
-        tablePanel.add(actionToolbar, BorderLayout.SOUTH);
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setOpaque(false);
+
+        JLabel lblHint = new JLabel("💡 Double-click a row to view full order details");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblHint.setForeground(Color.GRAY);
+        lblHint.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+        bottomPanel.add(lblHint, BorderLayout.WEST);
+
+        bottomPanel.add(actionToolbar, BorderLayout.EAST);
+
+        tablePanel.add(bottomPanel, BorderLayout.SOUTH);
         add(tablePanel, BorderLayout.CENTER);
     }
 

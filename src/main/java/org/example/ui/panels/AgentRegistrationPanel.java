@@ -23,7 +23,6 @@ public class AgentRegistrationPanel extends JPanel {
     private JTextField txtVehicleType;
     private JTextField txtVehiclePlate;
     private JTextField txtVehicleModel;
-    private JButton btnAddAgent;
 
     public AgentRegistrationPanel(DeliveryAgentImpl agentRepo, Runnable refreshCallback) {
         this.agentRepo = agentRepo;
@@ -76,18 +75,13 @@ public class AgentRegistrationPanel extends JPanel {
         // Add Agent Button
         gbc.gridx = 0; gbc.gridy = labelTexts.length; gbc.gridwidth = 2; gbc.weightx = 1.0;
         gbc.insets = new Insets(20, 15, 15, 15);
-        btnAddAgent = new JButton("Register Agent");
+        JButton btnAddAgent = new JButton("Register Agent");
         btnAddAgent.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAddAgent.setBackground(new Color(46, 111, 64));
         btnAddAgent.setForeground(Color.WHITE);
         btnAddAgent.putClientProperty("JButton.buttonType", "roundRect");
         btnAddAgent.putClientProperty("JButton.boldText", true);
-        btnAddAgent.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleAddAgent();
-            }
-        });
+        btnAddAgent.addActionListener(e -> handleAddAgent());
         innerForm.add(btnAddAgent, gbc);
 
         add(innerForm);

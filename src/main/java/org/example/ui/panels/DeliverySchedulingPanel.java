@@ -31,11 +31,9 @@ public class DeliverySchedulingPanel extends JPanel {
 
     private JComboBox<OrderWrapper> comboPendingOrders;
     private JComboBox<AgentWrapper> comboAvailableAgents;
-    private JButton btnAssignAgent;
 
     private JTable tableAgents;
     private DefaultTableModel modelAgents;
-    private JButton btnRefreshAgents;
 
     public DeliverySchedulingPanel(OrderService orderService, DeliveryAgentImpl agentRepo, Runnable refreshCallback) {
         this.orderService = orderService;
@@ -80,19 +78,14 @@ public class DeliverySchedulingPanel extends JPanel {
         // Row 2: Assign Button
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.weightx = 1.0;
         gbc.insets = new Insets(30, 10, 10, 10);
-        btnAssignAgent = new JButton("Assign Delivery Agent");
+        JButton btnAssignAgent = new JButton("Assign Delivery Agent");
         btnAssignAgent.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAssignAgent.setBackground(new Color(30, 100, 160));
         btnAssignAgent.setForeground(Color.WHITE);
         btnAssignAgent.setFocusPainted(false);
         btnAssignAgent.putClientProperty("JButton.buttonType", "roundRect");
         btnAssignAgent.putClientProperty("JButton.boldText", true);
-        btnAssignAgent.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleAssignAgent();
-            }
-        });
+        btnAssignAgent.addActionListener(e -> handleAssignAgent());
         assignForm.add(btnAssignAgent, gbc);
 
         add(assignForm, BorderLayout.WEST);
@@ -120,15 +113,10 @@ public class DeliverySchedulingPanel extends JPanel {
         agentsListPanel.add(scrollPane, BorderLayout.CENTER);
  
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        btnRefreshAgents = new JButton("Refresh Agents");
+        JButton btnRefreshAgents = new JButton("Refresh Agents");
         btnRefreshAgents.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnRefreshAgents.putClientProperty("JButton.buttonType", "roundRect");
-        btnRefreshAgents.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refreshCallback.run();
-            }
-        });
+        btnRefreshAgents.addActionListener(e -> refreshCallback.run());
         bottomPanel.add(btnRefreshAgents);
         agentsListPanel.add(bottomPanel, BorderLayout.SOUTH);
 
