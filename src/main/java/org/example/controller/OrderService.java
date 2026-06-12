@@ -2,12 +2,10 @@ package org.example.controller;
 
 import org.example.Repository.CustomerOrderRepository;
 import org.example.Repository.DeliveryAgentRepository;
-import org.example.Repository.EmailServiceRepository;
 import org.example.Repository.ProductRepository;
 import org.example.Repository.StockAuditRepository;
 import org.example.Repository.Impl.CustomerOrderImpl;
 import org.example.Repository.Impl.DeliveryAgentImpl;
-import org.example.Repository.Impl.EmailServiceImpl;
 import org.example.Repository.Impl.ProductRepositoryImpl;
 import org.example.Repository.Impl.StockAuditImpl;
 import org.example.model.Client;

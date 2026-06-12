@@ -1,37 +1,43 @@
 package org.example;
 
-import org.example.Repository.EmailServiceRepository;
-import org.example.Repository.Impl.EmailServiceImpl;
+import org.example.config.EmailConfig;
+import org.example.model.Client;
 import org.example.model.CustomerOrder;
+import org.example.model.OrderItem;
+import org.example.utils.EmailUtils;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
+import java.time.LocalDate;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
 public class EmailTest {
-   private static EmailServiceRepository emailServiceRepository = new EmailServiceImpl();
+    @Test
+    void shouldGenerateHtmlRowsForOrderItems() throws Exception {
 
-   @Test
-    public void testSendEmailForClient(){
-         String sendersEmail = "sithijahiripitiya16@gmail.com";
-            String recepientEmail = "sithijahiripitiya16@gmail.com";
-       CustomerOrder customerOrder = new CustomerOrder();
-           customerOrder.setMongoId("1234567890");
-           customerOrder.setProductName("Test Product");
-              customerOrder.setQuantityOrdered(2);
-                customerOrder.setTotalAmount(39.98);
-                emailServiceRepository.sendEmailForClient(sendersEmail, recepientEmail, customerOrder);
+        CustomerOrder order = new CustomerOrder();
 
+        order.setOrderItems(List.of(
+                new OrderItem("P001", "Laptop", 2, 1500),
+                new OrderItem("P002", "Mouse", 1, 50)
+        ));
 
-   }
+        Method method =
+                EmailUtils.class.getDeclaredMethod(
+                        "orderItemListToHtmlList",
+                        CustomerOrder.class
+                );
 
-   @Test
-   public void testEmailForDeliveryAgent(){
-       String sendersEmail = "sithijahiripitiya16@gmail.com";
-         String recepientEmail = "daniruidk@gmail.com";
-         CustomerOrder customerOrder = new CustomerOrder();
-       customerOrder.setProductName("Test Product");
-       customerOrder.setQuantityOrdered(2);
-       customerOrder.setTotalAmount(39.98);
+        method.setAccessible(true);
 
-         emailServiceRepository.sendEmailForDeliveryAgent(sendersEmail, recepientEmail, customerOrder);
+        String result =
+                (String) method.invoke(null, order);
 
-   }
+        assertTrue(result.contains("P001"));
+        assertTrue(result.contains("Laptop"));
+        assertTrue(result.contains("P002"));
+        assertTrue(result.contains("Mouse"));
+    }
+
 }
