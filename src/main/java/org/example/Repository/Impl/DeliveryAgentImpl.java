@@ -87,7 +87,8 @@ public class DeliveryAgentImpl implements DeliveryAgentRepository {
 
     private DeliveryAgent mapDocToAgent(Document doc) {
         DeliveryAgent a = new DeliveryAgent();
-        a.setMongoId(doc.getObjectId("_id").toString());
+        Object id = doc.get("_id");
+        a.setMongoId(id != null ? id.toString() : null);
         a.setName(doc.getString("name"));
         a.setPhone(doc.getString("phone"));
         a.setEmail(doc.getString("email"));

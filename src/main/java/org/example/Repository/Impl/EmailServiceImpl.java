@@ -4,9 +4,19 @@ import org.example.Repository.EmailServiceRepository;
 import org.example.config.EmailConfig;
 import org.example.model.CustomerOrder;
 
+import org.example.Repository.DeliveryAgentRepository;
+import org.example.Repository.Impl.DeliveryAgentImpl;
+import org.example.model.DeliveryAgent;
+
 import javax.swing.*;
 
 public class EmailServiceImpl implements EmailServiceRepository {
+
+    private final DeliveryAgentRepository agentRepo;
+
+    public EmailServiceImpl() {
+        this.agentRepo = new DeliveryAgentImpl();
+    }
 
     /**
      * Once the order has been dispatched, invoke this method
@@ -65,6 +75,21 @@ public class EmailServiceImpl implements EmailServiceRepository {
         </html>
         """;
 
+        String trackingNumber = "N/A";
+        String vehiclePlate = "N/A";
+        String agentId = customerOrder.getDeliveryAgentId();
+        if (agentId != null && !agentId.isEmpty()) {
+            try {
+                DeliveryAgent agent = agentRepo.getDeliveryAgent(agentId);
+                if (agent != null) {
+                    trackingNumber = agent.getLicenseNumber() != null ? agent.getLicenseNumber() : "N/A";
+                    vehiclePlate = agent.getVehiclePlate() != null ? agent.getVehiclePlate() : "N/A";
+                }
+            } catch (Exception e) {
+                System.err.println("[EmailService] Error fetching agent for client email: " + e.getMessage());
+            }
+        }
+
         String formattedBody = String.format(
                 body,
                 "/org/example/assets/image-removebg-preview.png",
@@ -72,22 +97,29 @@ public class EmailServiceImpl implements EmailServiceRepository {
                 customerOrder.getProductName(),
                 customerOrder.getQuantityOrdered(),
                 customerOrder.getTotalAmount(),
-                "1234567890", // TODO: get tracking number from delivery agent info
-                "ABC-1234" // TODO: get vehicle plate from delivery agent info
+                trackingNumber,
+                vehiclePlate
 
         );
-        // TODO : This should be temporarily set to DISPATCHED for testing
-        /**
-         * This should be removed if you send the real status via the constructor
-         * **/
-        customerOrder.setStatus(customerOrder.STATUS_DISPATCH);
+        String originalStatus = customerOrder.getStatus();
+        customerOrder.setStatus(CustomerOrder.STATUS_DISPATCH);
 
-        if(customerOrder.getStatus().equals(customerOrder.STATUS_DISPATCH)){
+        if(customerOrder.getStatus().equals(CustomerOrder.STATUS_DISPATCH)){
             EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, formattedBody);
-            JOptionPane.showMessageDialog(null, "Email sent successfully to the client!");
+            if (!java.awt.GraphicsEnvironment.isHeadless() && java.awt.Frame.getFrames().length > 0) {
+                JOptionPane.showMessageDialog(null, "Email sent successfully to the client!");
+            } else {
+                System.out.println("Email sent successfully to the client!");
+            }
         }else{
-            JOptionPane.showMessageDialog(null, "Order is not yet dispatched. Email will be sent once the order is dispatched.");
+            if (!java.awt.GraphicsEnvironment.isHeadless() && java.awt.Frame.getFrames().length > 0) {
+                JOptionPane.showMessageDialog(null, "Order is not yet dispatched. Email will be sent once the order is dispatched.");
+            } else {
+                System.out.println("Order is not yet dispatched. Email will be sent once the order is dispatched.");
+            }
         }
+
+        customerOrder.setStatus(originalStatus);
 
 
     }
@@ -149,29 +181,62 @@ public class EmailServiceImpl implements EmailServiceRepository {
                 </html>
                 """;
 
+        String agentName = "N/A";
+        String agentId = customerOrder.getDeliveryAgentId();
+        if (agentId != null && !agentId.isEmpty()) {
+            try {
+                DeliveryAgent agent = agentRepo.getDeliveryAgent(agentId);
+                if (agent != null) {
+                    agentName = agent.getName() != null ? agent.getName() : "N/A";
+                }
+            } catch (Exception e) {
+                System.err.println("[EmailService] Error fetching agent for agent email: " + e.getMessage());
+            }
+        }
+
+        String customerEmail = "N/A";
+        String customerAddress = "N/A";
+        String customerPhone = "N/A";
+        if (customerOrder.getClient() != null) {
+            customerEmail = customerOrder.getClient().getEmail() != null ? customerOrder.getClient().getEmail() : "N/A";
+            customerAddress = customerOrder.getClient().getAddress() != null ? customerOrder.getClient().getAddress() : "N/A";
+            customerPhone = customerOrder.getClient().getPhone() != null ? customerOrder.getClient().getPhone() : "N/A";
+        }
+
          String formattedBody = String.format(
                 body,
                 "/org/example/assets/image-removebg-preview.png",
-                "Kasun Perera",
+                agentName,
                 customerOrder.getMongoId(),
                 customerOrder.getProductName(),
                 customerOrder.getQuantityOrdered(),
                 customerOrder.getTotalAmount(),
                 customerOrder.getCustomerName(),
-                "testemail@gmail.com",
-                "No. 123, Main Street, Colombo",
-                "0712345678"
+                customerEmail,
+                customerAddress,
+                customerPhone
         );
 
 
-        customerOrder.setStatus(customerOrder.STATUS_DISPATCH);
+        String originalStatus = customerOrder.getStatus();
+        customerOrder.setStatus(CustomerOrder.STATUS_DISPATCH);
 
-        if(customerOrder.getStatus().equals(customerOrder.STATUS_DISPATCH)){
+        if(customerOrder.getStatus().equals(CustomerOrder.STATUS_DISPATCH)){
             EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, formattedBody);
-            JOptionPane.showMessageDialog(null, "Email sent successfully to the delivery agent!");
+            if (!java.awt.GraphicsEnvironment.isHeadless() && java.awt.Frame.getFrames().length > 0) {
+                JOptionPane.showMessageDialog(null, "Email sent successfully to the delivery agent!");
+            } else {
+                System.out.println("Email sent successfully to the delivery agent!");
+            }
         }else{
-            JOptionPane.showMessageDialog(null, "Order is not yet dispatched. Email will be sent once the order is dispatched.");
+            if (!java.awt.GraphicsEnvironment.isHeadless() && java.awt.Frame.getFrames().length > 0) {
+                JOptionPane.showMessageDialog(null, "Order is not yet dispatched. Email will be sent once the order is dispatched.");
+            } else {
+                System.out.println("Order is not yet dispatched. Email will be sent once the order is dispatched.");
+            }
         }
+
+        customerOrder.setStatus(originalStatus);
 
 
     }

@@ -208,15 +208,16 @@ public class ProductRepositoryImpl implements ProductRepository {
      */
     private Product mapDocToProduct(Document doc) {
         Product p = new Product();
-        p.setMongoId(doc.getObjectId("_id").toString());
+        Object id = doc.get("_id");
+        p.setMongoId(id != null ? id.toString() : null);
         p.setName(doc.getString("name"));
         p.setCategory(doc.getString("category"));
         p.setMaterial(doc.getString("material"));
-        p.setPrice(doc.getDouble("price"));
-        p.setStockQuantity(doc.getInteger("stock_quantity"));
+        p.setPrice(doc.get("price") != null ? ((Number) doc.get("price")).doubleValue() : 0.0);
+        p.setStockQuantity(doc.get("stock_quantity") != null ? ((Number) doc.get("stock_quantity")).intValue() : 0);
         p.setUnit(doc.getString("unit"));
         p.setSupplierName(doc.getString("supplier_name"));
-        p.setReorderLevel(doc.getInteger("reorder_level"));
+        p.setReorderLevel(doc.get("reorder_level") != null ? ((Number) doc.get("reorder_level")).intValue() : 0);
         return p;
     }
 }

@@ -10,6 +10,7 @@ import org.example.Repository.Impl.DeliveryAgentImpl;
 import org.example.Repository.Impl.EmailServiceImpl;
 import org.example.Repository.Impl.ProductRepositoryImpl;
 import org.example.Repository.Impl.StockAuditImpl;
+import org.example.model.Client;
 import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.Product;
@@ -48,9 +49,19 @@ public class OrderService {
     }
 
     /**
-     * Create client order, calculate totals, check and decrement inventory stock, and log audit log.
+     * Backward-compatible placeOrder for 4 arguments.
      */
     public CustomerOrder placeOrder(String productId, int quantityOrdered, String customerName, LocalDate orderDate) {
+        String customerEmail = customerName.toLowerCase().replaceAll("\\s+", "") + "@example.com";
+        return placeOrder(productId, quantityOrdered, customerName, customerEmail, "", "", orderDate);
+    }
+
+    /**
+     * Create client order, calculate totals, check and decrement inventory stock, and log audit log.
+     */
+    public CustomerOrder placeOrder(String productId, int quantityOrdered, String customerName, 
+                                     String customerEmail, String customerPhone, String customerAddress, 
+                                     LocalDate orderDate) {
         try {
             Product product = productRepo.getProductById(productId);
             if (product == null) {
@@ -81,6 +92,8 @@ public class OrderService {
                     orderDate,
                     null
             );
+            // Populate full client details from GUI
+            order.setClient(new Client(customerName, customerEmail, customerPhone, customerAddress));
             order.setSupplierName(product.getSupplierName());
 
             CustomerOrder savedOrder = orderRepo.addOrder(order);
@@ -96,9 +109,8 @@ public class OrderService {
                 );
                 auditRepo.addAuditLog(audit);
 
-                // Notify Client (mock email)
-                String clientEmail = customerName.toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                emailService.sendEmailForClient("no-reply@greenloop.com", clientEmail, savedOrder);
+                // Notify Client using the dynamic email address
+                emailService.sendEmailForClient("no-reply@greenloop.com", customerEmail, savedOrder);
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {
@@ -153,7 +165,9 @@ public class OrderService {
 
             if (updatedOrder != null && updatedAgent != null) {
                 // Notify both
-                String clientEmail = order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
+                String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
+                        ? order.getClient().getEmail()
+                        : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
                 emailService.sendEmailForClient("no-reply@greenloop.com", clientEmail, order);
                 emailService.sendEmailForDeliveryAgent("no-reply@greenloop.com", agent.getEmail(), order);
 
@@ -203,7 +217,9 @@ public class OrderService {
             }
 
             if (updatedOrder != null) {
-                String clientEmail = order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
+                String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
+                        ? order.getClient().getEmail()
+                        : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
                 emailService.sendEmailForClient("no-reply@greenloop.com", clientEmail, order);
                 System.out.println("[OrderService] Order " + orderId + " delivered successfully!");
                 return true;

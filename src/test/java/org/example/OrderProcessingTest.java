@@ -71,6 +71,9 @@ public class OrderProcessingTest {
                 productId,
                 10,
                 "John Doe",
+                "john.doe@test.com",
+                "0711111111",
+                "123 Test Lane, Colombo",
                 LocalDate.now()
         );
 
@@ -82,6 +85,10 @@ public class OrderProcessingTest {
         assertEquals(100.00, order.getTotalAmount());
         assertEquals("PENDING", order.getStatus());
         assertEquals("EcoSupply Co", order.getSupplierName());
+        assertNotNull(order.getClient());
+        assertEquals("john.doe@test.com", order.getClient().getEmail());
+        assertEquals("0711111111", order.getClient().getPhone());
+        assertEquals("123 Test Lane, Colombo", order.getClient().getAddress());
 
         orderId1 = order.getMongoId();
 
