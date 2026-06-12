@@ -24,7 +24,7 @@ public class EmailConfig {
            protected PasswordAuthentication getPasswordAuthentication() {
                return new PasswordAuthentication(
                        sendersEmail,
-                       "jvpy thfj cnco diog");
+                       "naeu chrv wtcm iopd");
 
            }
        });
