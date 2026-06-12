@@ -1,17 +1,54 @@
 package org.example.utils;
 
 import org.example.Repository.DeliveryAgentRepository;
+import org.example.Repository.ProductRepository;
 import org.example.Repository.Impl.DeliveryAgentImpl;
+import org.example.Repository.Impl.ProductRepositoryImpl;
 import org.example.config.EmailConfig;
 import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.OrderItem;
 
+import java.awt.GraphicsEnvironment;
 import javax.swing.*;
 
 public class EmailUtils {
     private static DeliveryAgentRepository deliveryAgentRepository = new DeliveryAgentImpl();
+    private static ProductRepository productRepository = new ProductRepositoryImpl();
     private static OrderItem orderItem;
+
+    private static boolean lastEmailClientSuccess = true;
+    private static boolean lastEmailAgentSuccess = true;
+
+    public static boolean isLastEmailClientSuccess() {
+        return lastEmailClientSuccess;
+    }
+    public static boolean isLastEmailAgentSuccess() {
+        return lastEmailAgentSuccess;
+    }
+
+    private static String getLogoBase64() {
+        try {
+            try (java.io.InputStream is = EmailUtils.class.getResourceAsStream("/org/example/assets/image-removebg-preview.png")) {
+                if (is != null) {
+                    byte[] bytes = is.readAllBytes();
+                    return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(bytes);
+                }
+            }
+        } catch (Exception e) {
+            // Ignore, try direct file load
+        }
+        try {
+            java.io.File file = new java.io.File("src/main/java/org/example/assets/image-removebg-preview.png");
+            if (file.exists()) {
+                byte[] bytes = java.nio.file.Files.readAllBytes(file.toPath());
+                return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(bytes);
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return "";
+    }
 
     public static void sendEmailForDeliveryAgent(String sendersEmail, String recepientEmail, CustomerOrder customerOrder) {
         String subject = "New Delivery Assignment: Order #" + customerOrder.getMongoId();
@@ -23,7 +60,7 @@ public class EmailUtils {
                 
                                         <tr>
                                             <td style="padding: 30px; text-align: center; background-color: #224a37; color: #ffffff; ">
-                                                <img src=%s alt="" width="100" height="100"`>
+                                                <img src="%s" alt="Green Loop Logo" width="100" height="100">
                                                 <h1 style="margin: 0; font-size: 15px; letter-spacing: 1px;">Green Loop</h1>
                                             </td>
                                         </tr>
@@ -35,7 +72,7 @@ public class EmailUtils {
                                                 <p style="color: #555; line-height: 1.6;">We are pleased to inform you that you have been assigned to a new order.</p>
                 
                 
-                                                   <table border="0" width="100%" style="border-collapse: collapse; margin-bottom: 25px;">
+                                                   <table border="0" width="100%%" style="border-collapse: collapse; margin-bottom: 25px;">
                     <thead>
                         <tr style="background-color: #f4f4f4; text-align: left;">
                             <th style="padding: 10px; border-bottom: 2px solid #ddd;">Product Id</th>
@@ -81,34 +118,50 @@ public class EmailUtils {
 
 
 
-        String formattedBody = String.format(
-                body,
-                "/org/example/assets/image-removebg-preview.png",
-                deliveryAgentRepository.getDeliveryAgent(customerOrder.getDeliveryAgentId()).getName(),
-                orderItemListToHtmlList(customerOrder),
-                customerOrder.getClient().getName(),
-                customerOrder.getClient().getName(),
-                customerOrder.getClient().getAddress(),
-                customerOrder.getClient().getPhone()
-        );
-
-       boolean isSend = EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, formattedBody);
-        if(!isSend){
-            JOptionPane.showMessageDialog(null, "Failed to send email to delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
-        }else{
-            JOptionPane.showMessageDialog(null, "Email sent to delivery agent successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+        String agentName = "Delivery Agent";
+        if (customerOrder.getDeliveryAgentId() != null) {
+            DeliveryAgent agent = deliveryAgentRepository.getDeliveryAgent(customerOrder.getDeliveryAgentId());
+            if (agent != null) {
+                agentName = agent.getName();
+            }
         }
 
+        String clientName = customerOrder.getCustomerName() != null ? customerOrder.getCustomerName() : "Customer";
+        String clientEmail = "";
+        String clientAddress = "";
+        String clientPhone = "";
 
+        if (customerOrder.getClient() != null) {
+            clientName = customerOrder.getClient().getName();
+            clientEmail = customerOrder.getClient().getEmail();
+            clientAddress = customerOrder.getClient().getAddress();
+            clientPhone = customerOrder.getClient().getPhone();
+        }
 
+        String formattedBody = String.format(
+                 body,
+                 getLogoBase64(),
+                 agentName,
+                orderItemListToHtmlList(customerOrder),
+                clientName,
+                clientEmail,
+                clientAddress,
+                clientPhone
+        );
 
-
+        boolean isSend = EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, formattedBody);
+        lastEmailAgentSuccess = isSend;
+        if (!isSend) {
+            System.err.println("[EmailUtils] Failed to send email to delivery agent: " + recepientEmail);
+        } else {
+            System.out.println("[EmailUtils] Email sent to delivery agent successfully: " + recepientEmail);
+        }
     }
 
 
 
 
-    public void sendEmailForClient(String sendersEmail, String recepientEmail, CustomerOrder customerOrder) {
+    public static void sendEmailForClient(String sendersEmail, String recepientEmail, CustomerOrder customerOrder) {
         String subject = "Your order has been dispatched! ";
         String body = """
         <!DOCTYPE html>
@@ -119,7 +172,7 @@ public class EmailUtils {
                 
                 <tr>
                     <td style="padding: 30px; text-align: center; background-color: #224a37; color: #ffffff;">
-                        <img src=%s alt="" width="100" height="100"`>
+                        <img src="%s" alt="Green Loop Logo" width="100" height="100">
                         <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">Green Loop</h1>
                     </td>
                 </tr>
@@ -130,7 +183,7 @@ public class EmailUtils {
                         <p style="color: #555; line-height: 1.6;">Dear Customer,</p>
                         <p style="color: #555; line-height: 1.6;">We are pleased to inform you that your order has been dispatched and is currently in transit. You can expect your package to arrive shortly.</p>
         
-                        <table border="0" width="100%" style="border-collapse: collapse; margin-bottom: 25px;">
+                        <table border="0" width="100%%" style="border-collapse: collapse; margin-bottom: 25px;">
                     <thead>
                         <tr style="background-color: #f4f4f4; text-align: left;">
                             <th style="padding: 10px; border-bottom: 2px solid #ddd;">Product Id</th>
@@ -168,35 +221,51 @@ public class EmailUtils {
         </html>
         """;
 
+        String agentPlate = "Not Assigned Yet";
+        if (customerOrder.getDeliveryAgentId() != null) {
+            DeliveryAgent agent = deliveryAgentRepository.getDeliveryAgent(customerOrder.getDeliveryAgentId());
+            if (agent != null && agent.getVehiclePlate() != null) {
+                agentPlate = agent.getVehiclePlate();
+            }
+        }
+
         String result = String.format(
-           body,
-                "/org/example/assets/image-removebg-preview.png",
+                body,
+                getLogoBase64(),
                 orderItemListToHtmlList(customerOrder),
-                customerOrder.getMongoId(),
-                deliveryAgentRepository.getDeliveryAgent(customerOrder.getDeliveryAgentId()).getVehiclePlate()
+                customerOrder.getMongoId() != null ? customerOrder.getMongoId() : "N/A",
+                agentPlate
         );
 
         boolean isSend = EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, result);
-        if(!isSend){
-            JOptionPane.showMessageDialog(null, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
-        }else{
-            JOptionPane.showMessageDialog(null, "Email sent to client successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+        lastEmailClientSuccess = isSend;
+        if (!isSend) {
+            System.err.println("[EmailUtils] Failed to send email to client: " + recepientEmail);
+        } else {
+            System.out.println("[EmailUtils] Email sent to client successfully: " + recepientEmail);
         }
-
-
-
-
     }
 
     private static String orderItemListToHtmlList(CustomerOrder customerOrder) {
         StringBuilder tblView = new StringBuilder();
 
         for (OrderItem item : customerOrder.getOrderItems()) {
+            String category = "N/A";
+            try {
+                org.example.model.Product p = productRepository.getProductById(item.getProductId());
+                if (p != null && p.getCategory() != null) {
+                    category = p.getCategory();
+                }
+            } catch (Exception e) {
+                // Ignore
+            }
+            double totalPrice = item.getQuantity() * item.getUnitPrice();
             tblView.append("<tr>")
                     .append("<td style=\"padding: 10px; border-bottom: 1px solid #eee;\">").append(item.getProductId()).append("</td>")
                     .append("<td style=\"padding: 10px; border-bottom: 1px solid #eee;\">").append(item.getProductName()).append("</td>")
+                    .append("<td style=\"padding: 10px; border-bottom: 1px solid #eee;\">").append(category).append("</td>")
                     .append("<td style=\"padding: 10px; border-bottom: 1px solid #eee;\">").append(item.getQuantity()).append("</td>")
-                    .append("<td style=\"padding: 10px; border-bottom: 1px solid #eee;\">Rs. ").append(item.getUnitPrice()).append("</td>")
+                    .append("<td style=\"padding: 10px; border-bottom: 1px solid #eee;\">Rs. ").append(totalPrice).append("</td>")
                     .append("</tr>");
         }
 

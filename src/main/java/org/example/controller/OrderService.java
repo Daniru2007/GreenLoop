@@ -13,6 +13,7 @@ import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.Product;
 import org.example.model.StockAudit;
+import org.example.utils.EmailUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,27 +24,23 @@ public class OrderService {
     private final ProductRepository productRepo;
     private final DeliveryAgentRepository agentRepo;
     private final StockAuditRepository auditRepo;
-    private final EmailServiceRepository emailService;
 
     public OrderService() {
         this.orderRepo = new CustomerOrderImpl();
         this.productRepo = new ProductRepositoryImpl();
         this.agentRepo = new DeliveryAgentImpl();
         this.auditRepo = new StockAuditImpl();
-        this.emailService = new EmailServiceImpl();
     }
 
     /**
      * Helper constructor for dependency injection / testing
      */
     public OrderService(CustomerOrderRepository orderRepo, ProductRepository productRepo,
-                        DeliveryAgentRepository agentRepo, StockAuditRepository auditRepo,
-                        EmailServiceRepository emailService) {
+                        DeliveryAgentRepository agentRepo, StockAuditRepository auditRepo) {
         this.orderRepo = orderRepo;
         this.productRepo = productRepo;
         this.agentRepo = agentRepo;
         this.auditRepo = auditRepo;
-        this.emailService = emailService;
     }
 
     /**
@@ -108,7 +105,7 @@ public class OrderService {
                 auditRepo.addAuditLog(audit);
 
                 // Notify Client using the dynamic email address
-                emailService.sendEmailForClient("no-reply@greenloop.com", customerEmail, savedOrder);
+                EmailUtils.sendEmailForClient("sithijahiripitiya16@gmail.com", customerEmail, savedOrder);
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {
@@ -166,8 +163,8 @@ public class OrderService {
                 String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
                         ? order.getClient().getEmail()
                         : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                emailService.sendEmailForClient("no-reply@greenloop.com", clientEmail, order);
-                emailService.sendEmailForDeliveryAgent("no-reply@greenloop.com", agent.getEmail(), order);
+                EmailUtils.sendEmailForClient("sithijahiripitiya16@gmail.com", clientEmail, order);
+                EmailUtils.sendEmailForDeliveryAgent("sithijahiripitiya16@gmail.com", agent.getEmail(), order);
 
                 System.out.println("[OrderService] Agent " + agent.getName() + " assigned to order " + orderId);
                 return true;
@@ -218,7 +215,7 @@ public class OrderService {
                 String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
                         ? order.getClient().getEmail()
                         : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                emailService.sendEmailForClient("no-reply@greenloop.com", clientEmail, order);
+                EmailUtils.sendEmailForClient("sithijahiripitiya16@gmail.com", clientEmail, order);
                 System.out.println("[OrderService] Order " + orderId + " delivered successfully!");
                 return true;
             }

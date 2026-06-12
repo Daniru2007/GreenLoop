@@ -6,6 +6,7 @@ import org.example.model.CustomerOrder;
 import org.example.model.Product;
 import org.example.ui.UIStyleUtils;
 import org.example.ui.wrappers.ProductWrapper;
+import org.example.utils.EmailUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -340,8 +341,12 @@ public class OrderProcessingPanel extends JPanel {
 
         CustomerOrder order = orderService.placeOrder(p.getMongoId(), qty, clientName, clientEmail, clientPhone, clientAddress, LocalDate.now());
         if (order != null) {
-            JOptionPane.showMessageDialog(this, "Order placed successfully! Total: Rs. " + order.getTotalAmount(), 
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Order placed successfully! Total: Rs. " + String.format("%.2f", order.getTotalAmount()), "Success", JOptionPane.INFORMATION_MESSAGE);
+            if (EmailUtils.isLastEmailClientSuccess()) {
+                JOptionPane.showMessageDialog(this, "Email sent to client successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
+            }
             txtClientName.setText("");
             txtClientEmail.setText("");
             txtClientPhone.setText("");
@@ -381,6 +386,11 @@ public class OrderProcessingPanel extends JPanel {
             boolean success = orderService.completeDelivery(orderId);
             if (success) {
                 JOptionPane.showMessageDialog(this, "Delivery marked completed!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                if (EmailUtils.isLastEmailClientSuccess()) {
+                    JOptionPane.showMessageDialog(this, "Email sent to client successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
+                }
                 refreshCallback.run();
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to complete delivery.", "Error", JOptionPane.ERROR_MESSAGE);

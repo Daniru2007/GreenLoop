@@ -83,7 +83,7 @@ public class OrderManagementGUI extends JFrame {
 
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout(15, 10));
-        headerPanel.setBorder(new EmptyBorder(28, 20, 18, 20));
+        headerPanel.setBorder(new EmptyBorder(15, 20, 10, 20));
         headerPanel.setBackground(new Color(30, 33, 35));
 
         // Title and Subtitle panel

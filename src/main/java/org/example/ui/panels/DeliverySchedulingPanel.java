@@ -11,6 +11,7 @@ import org.example.model.DeliveryAgent;
 import org.example.ui.UIStyleUtils;
 import org.example.ui.wrappers.AgentWrapper;
 import org.example.ui.wrappers.OrderWrapper;
+import org.example.utils.EmailUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -202,8 +203,18 @@ public class DeliverySchedulingPanel extends JPanel {
 
         boolean success = orderService.assignDeliveryAgent(orderWrapper.getOrder().getMongoId(), agentWrapper.getAgent().getMongoId());
         if (success) {
-            JOptionPane.showMessageDialog(this, "Delivery agent assigned successfully!", 
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Delivery agent assigned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            boolean clientMail = EmailUtils.isLastEmailClientSuccess();
+            boolean agentMail = EmailUtils.isLastEmailAgentSuccess();
+            if (clientMail && agentMail) {
+                JOptionPane.showMessageDialog(this, "Emails sent to client and delivery agent successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+            } else if (!clientMail && !agentMail) {
+                JOptionPane.showMessageDialog(this, "Failed to send emails to client and delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
+            } else if (!clientMail) {
+                JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to send email to delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
+            }
             refreshCallback.run();
         } else {
             JOptionPane.showMessageDialog(this, "Failed to assign agent.", "Error", JOptionPane.ERROR_MESSAGE);
