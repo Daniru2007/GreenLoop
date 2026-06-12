@@ -7,6 +7,7 @@ import org.example.controller.ProductController;
 import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.Product;
+import org.example.model.OrderItem;
 import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
@@ -177,6 +178,64 @@ public class OrderProcessingTest {
 
         Product after = productController.getProductById(productId);
         assertEquals(stockBefore + 5, after.getStockQuantity(), "Stock of 5 should be refunded back");
+    }
+
+    @Test
+    @Order(7)
+    void testPlaceMultiProductOrder_SuccessAndCancel() {
+        // Register another product
+        Product p2 = productController.addProduct(
+                "Test Cup",
+                "Cups",
+                "Glass",
+                15.00,
+                20,
+                "piece",
+                "GlassSupply Co",
+                3
+        );
+        assertNotNull(p2);
+        String productId2 = p2.getMongoId();
+
+        Product prod1Before = productController.getProductById(productId);
+        Product prod2Before = productController.getProductById(productId2);
+
+        java.util.List<OrderItem> items = java.util.List.of(
+                new OrderItem(productId, "", 5, 0.0),
+                new OrderItem(productId2, "", 5, 0.0)
+        );
+
+        CustomerOrder order = orderService.placeOrder(
+                items,
+                "Jane Multi",
+                "jane.multi@test.com",
+                "0722222222",
+                "456 Multi St, Colombo",
+                LocalDate.now()
+        );
+
+        assertNotNull(order);
+        assertNotNull(order.getMongoId());
+        assertEquals(2, order.getOrderItems().size());
+        assertEquals(125.00, order.getTotalAmount()); // 5*10 + 5*15 = 50 + 75 = 125
+        assertEquals("PENDING", order.getStatus());
+
+        Product prod1After = productController.getProductById(productId);
+        Product prod2After = productController.getProductById(productId2);
+        assertEquals(prod1Before.getStockQuantity() - 5, prod1After.getStockQuantity());
+        assertEquals(prod2Before.getStockQuantity() - 5, prod2After.getStockQuantity());
+
+        boolean success = orderService.cancelOrder(order.getMongoId());
+        assertTrue(success);
+
+        Product prod1Refunded = productController.getProductById(productId);
+        Product prod2Refunded = productController.getProductById(productId2);
+        assertEquals(prod1Before.getStockQuantity(), prod1Refunded.getStockQuantity());
+        assertEquals(prod2Before.getStockQuantity(), prod2Refunded.getStockQuantity());
+
+        // Clean up
+        new CustomerOrderImpl().deleteOrder(order.getMongoId());
+        productController.deleteProduct(productId2);
     }
 
     @AfterAll

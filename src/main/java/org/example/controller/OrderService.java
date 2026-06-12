@@ -13,9 +13,11 @@ import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.Product;
 import org.example.model.StockAudit;
+import org.example.model.OrderItem;
 import org.example.utils.EmailUtils;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderService {
@@ -57,60 +59,104 @@ public class OrderService {
     public CustomerOrder placeOrder(String productId, int quantityOrdered, String customerName, 
                                      String customerEmail, String customerPhone, String customerAddress, 
                                      LocalDate orderDate) {
+        List<OrderItem> items = new ArrayList<>();
+        items.add(new OrderItem(productId, "", quantityOrdered, 0.0));
+        return placeOrder(items, customerName, customerEmail, customerPhone, customerAddress, orderDate);
+    }
+
+    /**
+     * Create client order with multiple products, check and decrement stock for all products,
+     * record audit logs, save order, and email client.
+     */
+    public CustomerOrder placeOrder(List<OrderItem> items, String customerName, 
+                                     String customerEmail, String customerPhone, String customerAddress, 
+                                     LocalDate orderDate) {
         try {
-            Product product = productRepo.getProductById(productId);
-            if (product == null) {
-                System.err.println("[OrderService] Product not found: " + productId);
-                return null;
+            // First pass: Validate stock for all products
+            for (OrderItem item : items) {
+                Product product = productRepo.getProductById(item.getProductId());
+                if (product == null) {
+                    System.err.println("[OrderService] Product not found: " + item.getProductId());
+                    return null;
+                }
+                if (product.getStockQuantity() < item.getQuantity()) {
+                    System.err.println("[OrderService] Insufficient stock for " + product.getName() +
+                            ". Available: " + product.getStockQuantity() + ", Ordered: " + item.getQuantity());
+                    return null;
+                }
             }
 
-            if (product.getStockQuantity() < quantityOrdered) {
-                System.err.println("[OrderService] Insufficient stock for " + product.getName() +
-                        ". Available: " + product.getStockQuantity() + ", Ordered: " + quantityOrdered);
-                return null;
+            // Populate unit prices and product names from DB, and decrement stock
+            List<OrderItem> populatedItems = new ArrayList<>();
+            List<Product> rolledBackProducts = new ArrayList<>();
+            List<Integer> rolledBackQuantities = new ArrayList<>();
+            boolean success = true;
+
+            for (OrderItem item : items) {
+                Product product = productRepo.getProductById(item.getProductId());
+                int quantityBefore = product.getStockQuantity();
+                Product updatedProduct = productRepo.updateStock(item.getProductId(), -item.getQuantity());
+                if (updatedProduct == null) {
+                    System.err.println("[OrderService] Failed to update product stock: " + item.getProductId());
+                    success = false;
+                    break;
+                }
+                rolledBackProducts.add(product);
+                rolledBackQuantities.add(item.getQuantity());
+
+                populatedItems.add(new OrderItem(
+                        item.getProductId(),
+                        product.getName(),
+                        item.getQuantity(),
+                        product.getPrice()
+                ));
             }
 
-            int quantityBefore = product.getStockQuantity();
-            Product updatedProduct = productRepo.updateStock(productId, -quantityOrdered);
-            if (updatedProduct == null) {
-                System.err.println("[OrderService] Failed to update product stock: " + productId);
+            if (!success) {
+                // Rollback stock for successfully decremented items
+                for (int i = 0; i < rolledBackProducts.size(); i++) {
+                    productRepo.updateStock(rolledBackProducts.get(i).getMongoId(), rolledBackQuantities.get(i));
+                }
                 return null;
             }
 
             // Create initial pending order
-            CustomerOrder order = new CustomerOrder(
-                    productId,
-                    product.getName(),
-                    quantityOrdered,
-                    product.getPrice(),
-                    customerName,
-                    orderDate,
-                    null
-            );
-            // Populate full client details from GUI
+            CustomerOrder order = new CustomerOrder();
             order.setClient(new Client(customerName, customerEmail, customerPhone, customerAddress));
-            order.setSupplierName(product.getSupplierName());
+            order.setOrderItems(populatedItems);
+            order.setOrderDate(orderDate);
+            order.setStatus(CustomerOrder.STATUS_PENDING);
+            if (!rolledBackProducts.isEmpty()) {
+                order.setSupplierName(rolledBackProducts.get(0).getSupplierName());
+            }
 
             CustomerOrder savedOrder = orderRepo.addOrder(order);
             if (savedOrder != null) {
-                // Log Stock Audit
-                StockAudit audit = new StockAudit(
-                        productId,
-                        product.getName(),
-                        "SALE",
-                        quantityBefore,
-                        quantityBefore - quantityOrdered,
-                        "Client Order Placed: " + savedOrder.getMongoId()
-                );
-                auditRepo.addAuditLog(audit);
+                // Log Stock Audit for each product
+                for (int i = 0; i < rolledBackProducts.size(); i++) {
+                    Product prod = rolledBackProducts.get(i);
+                    int qty = rolledBackQuantities.get(i);
+                    int qtyBefore = prod.getStockQuantity();
+                    StockAudit audit = new StockAudit(
+                            prod.getMongoId(),
+                            prod.getName(),
+                            "SALE",
+                            qtyBefore,
+                            qtyBefore - qty,
+                            "Client Order Placed: " + savedOrder.getMongoId()
+                    );
+                    auditRepo.addAuditLog(audit);
+                }
 
-                // Notify Client using the dynamic email address
+                // Notify Client
                 EmailUtils.sendEmailForClient("sithijahiripitiya16@gmail.com", customerEmail, savedOrder);
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {
-                // Rollback stock if order creation fails
-                productRepo.updateStock(productId, quantityOrdered);
+                // Rollback all stock if order creation fails
+                for (int i = 0; i < rolledBackProducts.size(); i++) {
+                    productRepo.updateStock(rolledBackProducts.get(i).getMongoId(), rolledBackQuantities.get(i));
+                }
                 System.err.println("[OrderService] Failed to save order. Stock rolled back.");
             }
 
@@ -251,22 +297,26 @@ public class OrderService {
             CustomerOrder updatedOrder = orderRepo.updateOrder(order);
 
             if (updatedOrder != null) {
-                // 1. Return stock to inventory
-                Product product = productRepo.getProductById(order.getProductId());
-                if (product != null) {
-                    int quantityBefore = product.getStockQuantity();
-                    productRepo.updateStock(order.getProductId(), order.getQuantityOrdered());
+                // 1. Return stock to inventory for all items
+                if (order.getOrderItems() != null) {
+                    for (OrderItem item : order.getOrderItems()) {
+                        Product product = productRepo.getProductById(item.getProductId());
+                        if (product != null) {
+                            int quantityBefore = product.getStockQuantity();
+                            productRepo.updateStock(item.getProductId(), item.getQuantity());
 
-                    // Log audit trail
-                    StockAudit audit = new StockAudit(
-                            order.getProductId(),
-                            order.getProductName(),
-                            "RESTOCK",
-                            quantityBefore,
-                            quantityBefore + order.getQuantityOrdered(),
-                            "Order Cancelled Restock: " + orderId
-                    );
-                    auditRepo.addAuditLog(audit);
+                            // Log audit trail
+                            StockAudit audit = new StockAudit(
+                                    item.getProductId(),
+                                    item.getProductName(),
+                                    "RESTOCK",
+                                    quantityBefore,
+                                    quantityBefore + item.getQuantity(),
+                                    "Order Cancelled Restock: " + orderId
+                            );
+                            auditRepo.addAuditLog(audit);
+                        }
+                    }
                 }
 
                 // 2. Release agent if assigned

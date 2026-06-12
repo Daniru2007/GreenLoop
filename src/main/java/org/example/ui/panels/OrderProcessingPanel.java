@@ -37,6 +37,12 @@ public class OrderProcessingPanel extends JPanel {
     private JLabel lblStockAvailable;
     private JButton btnPlaceOrder;
 
+    private JButton btnAddToCart;
+    private JTable tableCart;
+    private DefaultTableModel modelCart;
+    private JButton btnRemoveFromCart;
+    private JLabel lblCartTotal;
+
     private JTable tableOrders;
     private DefaultTableModel modelOrders;
     private JButton btnCancelOrder;
@@ -149,18 +155,83 @@ public class OrderProcessingPanel extends JPanel {
         lblUnitPrice.setFont(new Font("Segoe UI", Font.BOLD, 13));
         formPanel.add(lblUnitPrice, gbc);
 
-        // Row 8: Total Amount
+        // Row 8: Item Total (Total Amount)
         gbc.gridx = 0; gbc.gridy = 8; gbc.weightx = 0.0;
-        formPanel.add(UIStyleUtils.createStyledLabel("Total Amount:"), gbc);
+        formPanel.add(UIStyleUtils.createStyledLabel("Item Total:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         lblTotalAmount = new JLabel("Rs. 0.00");
         lblTotalAmount.setFont(new Font("Segoe UI", Font.BOLD, 15));
         lblTotalAmount.setForeground(new Color(100, 200, 120));
         formPanel.add(lblTotalAmount, gbc);
 
-        // Row 9: Place Order Button
+        // Row 9: Add to Cart Button
         gbc.gridx = 0; gbc.gridy = 9; gbc.gridwidth = 2; gbc.weightx = 1.0;
-        gbc.insets = new Insets(25, 8, 8, 8);
+        gbc.insets = new Insets(10, 8, 10, 8);
+        btnAddToCart = new JButton("Add to Cart");
+        btnAddToCart.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnAddToCart.setBackground(new Color(40, 140, 80));
+        btnAddToCart.setForeground(Color.WHITE);
+        btnAddToCart.setFocusPainted(false);
+        btnAddToCart.putClientProperty("JButton.buttonType", "roundRect");
+        btnAddToCart.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleAddToCart();
+            }
+        });
+        formPanel.add(btnAddToCart, gbc);
+
+        // Row 10: Cart Table
+        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(5, 8, 5, 8);
+        String[] cartColumns = {"Product ID", "Product Name", "Qty", "Unit Price", "Total"};
+        modelCart = new DefaultTableModel(cartColumns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tableCart = new JTable(modelCart);
+        tableCart.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tableCart.setRowHeight(22);
+        tableCart.setShowHorizontalLines(true);
+        tableCart.setShowVerticalLines(false);
+        JScrollPane scrollCart = new JScrollPane(tableCart);
+        scrollCart.setPreferredSize(new Dimension(340, 150));
+        formPanel.add(scrollCart, gbc);
+
+        // Row 11: Cart Controls Panel
+        gbc.gridx = 0; gbc.gridy = 11; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 8, 5, 8);
+        JPanel cartControlPanel = new JPanel(new BorderLayout(5, 5));
+        cartControlPanel.setOpaque(false);
+
+        btnRemoveFromCart = new JButton("Remove Selected");
+        btnRemoveFromCart.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnRemoveFromCart.setBackground(new Color(160, 50, 50));
+        btnRemoveFromCart.setForeground(Color.WHITE);
+        btnRemoveFromCart.putClientProperty("JButton.buttonType", "roundRect");
+        btnRemoveFromCart.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleRemoveFromCart();
+            }
+        });
+        cartControlPanel.add(btnRemoveFromCart, BorderLayout.WEST);
+
+        lblCartTotal = new JLabel("Order Total: Rs. 0.00");
+        lblCartTotal.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblCartTotal.setForeground(new Color(120, 220, 150));
+        cartControlPanel.add(lblCartTotal, BorderLayout.EAST);
+
+        formPanel.add(cartControlPanel, gbc);
+
+        // Row 12: Place Order Button
+        gbc.gridx = 0; gbc.gridy = 12; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(15, 8, 8, 8);
         btnPlaceOrder = new JButton("Place Client Order");
         btnPlaceOrder.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnPlaceOrder.setBackground(new Color(46, 111, 64));
@@ -254,11 +325,21 @@ public class OrderProcessingPanel extends JPanel {
         try {
             List<CustomerOrder> orders = orderService.getAllOrders();
             for (CustomerOrder o : orders) {
+                StringBuilder prodSummary = new StringBuilder();
+                int totalQty = 0;
+                if (o.getOrderItems() != null) {
+                    for (int i = 0; i < o.getOrderItems().size(); i++) {
+                        org.example.model.OrderItem item = o.getOrderItems().get(i);
+                        if (i > 0) prodSummary.append(", ");
+                        prodSummary.append(item.getProductName()).append(" (x").append(item.getQuantity()).append(")");
+                        totalQty += item.getQuantity();
+                    }
+                }
                 modelOrders.addRow(new Object[]{
                         o.getMongoId(),
                         o.getCustomerName(),
-                        o.getProductName(),
-                        o.getQuantityOrdered(),
+                        prodSummary.toString(),
+                        totalQty,
                         String.format("Rs. %.2f", o.getTotalAmount()),
                         o.getStatus(),
                         o.getDeliveryAgentId() == null ? "None" : o.getDeliveryAgentId()
@@ -324,22 +405,20 @@ public class OrderProcessingPanel extends JPanel {
             return;
         }
 
-        ProductWrapper productWrapper = (ProductWrapper) comboProducts.getSelectedItem();
-        if (productWrapper == null) {
-            JOptionPane.showMessageDialog(this, "Please select a product.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (modelCart.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Please add at least one product to the order.", "Cart Empty", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Product p = productWrapper.getProduct();
-        int qty = (Integer) spinQuantity.getValue();
-
-        if (p.getStockQuantity() < qty) {
-            JOptionPane.showMessageDialog(this, "Insufficient stock! Available: " + p.getStockQuantity(), 
-                    "Stock Warning", JOptionPane.WARNING_MESSAGE);
-            return;
+        List<org.example.model.OrderItem> items = new java.util.ArrayList<>();
+        for (int i = 0; i < modelCart.getRowCount(); i++) {
+            String pId = (String) modelCart.getValueAt(i, 0);
+            String pName = (String) modelCart.getValueAt(i, 1);
+            int qty = (Integer) modelCart.getValueAt(i, 2);
+            items.add(new org.example.model.OrderItem(pId, pName, qty, 0.0));
         }
 
-        CustomerOrder order = orderService.placeOrder(p.getMongoId(), qty, clientName, clientEmail, clientPhone, clientAddress, LocalDate.now());
+        CustomerOrder order = orderService.placeOrder(items, clientName, clientEmail, clientPhone, clientAddress, LocalDate.now());
         if (order != null) {
             JOptionPane.showMessageDialog(this, "Order placed successfully! Total: Rs. " + String.format("%.2f", order.getTotalAmount()), "Success", JOptionPane.INFORMATION_MESSAGE);
             if (EmailUtils.isLastEmailClientSuccess()) {
@@ -352,11 +431,93 @@ public class OrderProcessingPanel extends JPanel {
             txtClientPhone.setText("");
             txtClientAddress.setText("");
             spinQuantity.setValue(1);
+            modelCart.setRowCount(0);
+            updateCartTotal();
             refreshCallback.run();
         } else {
             JOptionPane.showMessageDialog(this, "Failed to place order. Check logs for details.", 
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void handleAddToCart() {
+        ProductWrapper productWrapper = (ProductWrapper) comboProducts.getSelectedItem();
+        if (productWrapper == null) {
+            JOptionPane.showMessageDialog(this, "Please select a product.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Product p = productWrapper.getProduct();
+        int qty = (Integer) spinQuantity.getValue();
+        if (qty <= 0) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid quantity.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Check if item already exists in the cart
+        int existingRow = -1;
+        for (int i = 0; i < modelCart.getRowCount(); i++) {
+            if (p.getMongoId().equals(modelCart.getValueAt(i, 0))) {
+                existingRow = i;
+                break;
+            }
+        }
+
+        int totalQty = qty;
+        if (existingRow != -1) {
+            totalQty += (Integer) modelCart.getValueAt(existingRow, 2);
+        }
+
+        if (p.getStockQuantity() < totalQty) {
+            JOptionPane.showMessageDialog(this, "Insufficient stock! Available: " + p.getStockQuantity() + 
+                    (existingRow != -1 ? " (currently in cart: " + modelCart.getValueAt(existingRow, 2) + ")" : ""), 
+                    "Stock Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        double unitPrice = p.getPrice();
+        double total = unitPrice * totalQty;
+
+        if (existingRow != -1) {
+            modelCart.setValueAt(totalQty, existingRow, 2);
+            modelCart.setValueAt(String.format("Rs. %.2f", total), existingRow, 4);
+        } else {
+            modelCart.addRow(new Object[]{
+                    p.getMongoId(),
+                    p.getName(),
+                    totalQty,
+                    String.format("Rs. %.2f", unitPrice),
+                    String.format("Rs. %.2f", total)
+            });
+        }
+
+        updateCartTotal();
+        spinQuantity.setValue(1);
+    }
+
+    private void handleRemoveFromCart() {
+        int selectedRow = tableCart.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select an item from the cart to remove.", 
+                    "Select Item", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        modelCart.removeRow(selectedRow);
+        updateCartTotal();
+    }
+
+    private void updateCartTotal() {
+        double total = 0.0;
+        for (int i = 0; i < modelCart.getRowCount(); i++) {
+            String totalStr = (String) modelCart.getValueAt(i, 4);
+            try {
+                String cleanStr = totalStr.replace("Rs. ", "").trim();
+                total += Double.parseDouble(cleanStr);
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        lblCartTotal.setText(String.format("Order Total: Rs. %.2f", total));
     }
 
     private void handleCompleteDelivery() {
