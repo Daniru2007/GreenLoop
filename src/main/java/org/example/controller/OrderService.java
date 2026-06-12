@@ -149,7 +149,7 @@ public class OrderService {
                 }
 
                 // Notify Client
-                EmailUtils.sendEmailForClient("greenloop.lk@gmail.com", customerEmail, savedOrder);
+                EmailUtils.sendEmailForClient(customerEmail, savedOrder);
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {
@@ -209,8 +209,8 @@ public class OrderService {
                 String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
                         ? order.getClient().getEmail()
                         : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                EmailUtils.sendEmailForClient("greenloop.lk@gmail.com", clientEmail, order);
-                EmailUtils.sendEmailForDeliveryAgent("greenloop.lk@gmail.com", agent.getEmail(), order);
+                EmailUtils.sendEmailForClient(clientEmail, order);
+                EmailUtils.sendEmailForDeliveryAgent(agent.getEmail(), order);
 
                 System.out.println("[OrderService] Agent " + agent.getName() + " assigned to order " + orderId);
                 return true;
@@ -261,7 +261,7 @@ public class OrderService {
                 String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
                         ? order.getClient().getEmail()
                         : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                EmailUtils.sendEmailForClient("greenloop.lk@gmail.com", clientEmail, order);
+                EmailUtils.sendEmailForClient(clientEmail, order);
                 System.out.println("[OrderService] Order " + orderId + " delivered successfully!");
                 return true;
             }

@@ -7,6 +7,10 @@ import org.example.model.Product;
 import org.example.ui.UIStyleUtils;
 import org.example.ui.wrappers.ProductWrapper;
 import org.example.utils.EmailUtils;
+import org.example.model.OrderItem;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -262,12 +266,48 @@ public class OrderProcessingPanel extends JPanel {
                 return false;
             }
         };
-        tableOrders = new JTable(modelOrders);
+        tableOrders = new JTable(modelOrders) {
+            @Override
+            public String getToolTipText(MouseEvent e) {
+                int row = rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    return "Click to view order details and products";
+                }
+                return super.getToolTipText(e);
+            }
+        };
         tableOrders.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tableOrders.setRowHeight(28);
         tableOrders.setShowHorizontalLines(true);
         tableOrders.setShowVerticalLines(false);
         tableOrders.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        // Click listener on any column/row to show order items dialog
+        tableOrders.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = tableOrders.rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    int modelRow = tableOrders.convertRowIndexToModel(row);
+                    String orderId = (String) modelOrders.getValueAt(modelRow, 0);
+                    showOrderItemsDialog(orderId);
+                }
+            }
+        });
+
+        // Hover cursor effect to indicate clickability
+        tableOrders.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int row = tableOrders.rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    tableOrders.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                } else {
+                    tableOrders.setCursor(Cursor.getDefaultCursor());
+                }
+            }
+        });
+
         JScrollPane scrollPane = new JScrollPane(tableOrders);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
@@ -587,5 +627,127 @@ public class OrderProcessingPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Failed to cancel order.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void showOrderItemsDialog(String orderId) {
+        CustomerOrder order = orderService.getOrderById(orderId);
+        if (order == null) {
+            JOptionPane.showMessageDialog(this, "Could not retrieve order details.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog;
+        if (parentWindow instanceof Frame) {
+            dialog = new JDialog((Frame) parentWindow, "Order Details - #" + orderId, true);
+        } else {
+            dialog = new JDialog((Dialog) parentWindow, "Order Details - #" + orderId, true);
+        }
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setSize(650, 400);
+        dialog.setLocationRelativeTo(this);
+
+        // Header panel
+        JPanel headerPanel = new JPanel(new GridBagLayout());
+        headerPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(60, 65, 70)),
+                BorderFactory.createEmptyBorder(12, 15, 12, 15)
+        ));
+        headerPanel.setBackground(new Color(30, 33, 35));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        JLabel lblOrder = new JLabel("Order: #" + orderId);
+        lblOrder.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblOrder.setForeground(new Color(120, 220, 150));
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        headerPanel.add(lblOrder, gbc);
+
+        JLabel lblClientText = new JLabel("Client: ");
+        lblClientText.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblClientText.setForeground(Color.LIGHT_GRAY);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+        headerPanel.add(lblClientText, gbc);
+
+        JLabel lblClientVal = new JLabel(order.getCustomerName() != null ? order.getCustomerName() : "N/A");
+        lblClientVal.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblClientVal.setForeground(Color.WHITE);
+        gbc.gridx = 1; gbc.gridy = 1;
+        headerPanel.add(lblClientVal, gbc);
+
+        JLabel lblStatusText = new JLabel("Status: ");
+        lblStatusText.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblStatusText.setForeground(Color.LIGHT_GRAY);
+        gbc.gridx = 0; gbc.gridy = 2;
+        headerPanel.add(lblStatusText, gbc);
+
+        JLabel lblStatusVal = new JLabel(order.getStatus());
+        lblStatusVal.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        if ("DELIVERED".equals(order.getStatus())) {
+            lblStatusVal.setForeground(new Color(46, 204, 113));
+        } else if ("CANCELLED".equals(order.getStatus())) {
+            lblStatusVal.setForeground(new Color(231, 76, 60));
+        } else if ("PROCESSING".equals(order.getStatus())) {
+            lblStatusVal.setForeground(new Color(52, 152, 219));
+        } else {
+            lblStatusVal.setForeground(new Color(241, 196, 15));
+        }
+        gbc.gridx = 1; gbc.gridy = 2;
+        headerPanel.add(lblStatusVal, gbc);
+
+        dialog.add(headerPanel, BorderLayout.NORTH);
+
+        // Table panel
+        String[] cols = {"Product ID", "Product Name", "Quantity", "Unit Price", "Total Price"};
+        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        if (order.getOrderItems() != null) {
+            for (OrderItem item : order.getOrderItems()) {
+                double total = item.getQuantity() * item.getUnitPrice();
+                model.addRow(new Object[]{
+                        item.getProductId(),
+                        item.getProductName(),
+                        item.getQuantity(),
+                        String.format("Rs. %.2f", item.getUnitPrice()),
+                        String.format("Rs. %.2f", total)
+                });
+            }
+        }
+
+        JTable table = new JTable(model);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setRowHeight(25);
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(false);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        dialog.add(scroll, BorderLayout.CENTER);
+
+        // Footer panel
+        JPanel footerPanel = new JPanel(new BorderLayout());
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
+
+        JLabel lblTotal = new JLabel(String.format("Total Amount: Rs. %.2f", order.getTotalAmount()));
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTotal.setForeground(new Color(120, 220, 150));
+        footerPanel.add(lblTotal, BorderLayout.WEST);
+
+        JButton btnClose = new JButton("Close");
+        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnClose.putClientProperty("JButton.buttonType", "roundRect");
+        btnClose.addActionListener(evt -> dialog.dispose());
+        footerPanel.add(btnClose, BorderLayout.EAST);
+
+        dialog.add(footerPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
 }

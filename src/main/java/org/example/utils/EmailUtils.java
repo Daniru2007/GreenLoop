@@ -50,7 +50,7 @@ public class EmailUtils {
         return "";
     }
 
-    public static void sendEmailForDeliveryAgent(String sendersEmail, String recepientEmail, CustomerOrder customerOrder) {
+    public static void sendEmailForDeliveryAgent(String recepientEmail, CustomerOrder customerOrder) {
         String subject = "New Delivery Assignment: Order #" + customerOrder.getMongoId();
         String body = """
                 <html>
@@ -149,7 +149,7 @@ public class EmailUtils {
                 clientPhone
         );
 
-        boolean isSend = EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, formattedBody);
+        boolean isSend = EmailConfig.sendEmail(recepientEmail, subject, formattedBody);
         lastEmailAgentSuccess = isSend;
         if (!isSend) {
             System.err.println("[EmailUtils] Failed to send email to delivery agent: " + recepientEmail);
@@ -161,7 +161,7 @@ public class EmailUtils {
 
 
 
-    public static void sendEmailForClient(String sendersEmail, String recepientEmail, CustomerOrder customerOrder) {
+    public static void sendEmailForClient(String recepientEmail, CustomerOrder customerOrder) {
         String subject = "Your order has been dispatched! ";
         String body = """
         <!DOCTYPE html>
@@ -237,7 +237,7 @@ public class EmailUtils {
                 agentPlate
         );
 
-        boolean isSend = EmailConfig.sendEmail(sendersEmail, recepientEmail, subject, result);
+        boolean isSend = EmailConfig.sendEmail(recepientEmail, subject, result);
         lastEmailClientSuccess = isSend;
         if (!isSend) {
             System.err.println("[EmailUtils] Failed to send email to client: " + recepientEmail);
