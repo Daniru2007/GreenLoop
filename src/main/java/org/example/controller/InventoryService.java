@@ -32,9 +32,18 @@ public class InventoryService {
     public Product registerProduct(String name, String category, String material,
                                    double price, int initialStock, String unit,
                                    String supplierName, int reorderLevel) {
+        return registerProduct(name, category, material, price, initialStock, unit, supplierName, reorderLevel, 1);
+    }
+
+    /**
+     * Register a new product with eco-rating
+     */
+    public Product registerProduct(String name, String category, String material,
+                                   double price, int initialStock, String unit,
+                                   String supplierName, int reorderLevel, int ecoRating) {
         try {
             Product product = new Product(name, category, material, price, initialStock,
-                    unit, supplierName, reorderLevel);
+                    unit, supplierName, reorderLevel, ecoRating);
             
             Product savedProduct = productRepo.addProduct(product);
             
@@ -296,6 +305,17 @@ public class InventoryService {
     public Product updateProductDetails(String productId, String name, String category, 
                                        String material, double price, String unit,
                                        String supplierName, int reorderLevel) {
+        Product p = productRepo.getProductById(productId);
+        int currentEcoRating = p != null ? p.getEcoRating() : 1;
+        return updateProductDetails(productId, name, category, material, price, unit, supplierName, reorderLevel, currentEcoRating);
+    }
+
+    /**
+     * Update product details with eco-rating
+     */
+    public Product updateProductDetails(String productId, String name, String category, 
+                                       String material, double price, String unit,
+                                       String supplierName, int reorderLevel, int ecoRating) {
         try {
             Product product = productRepo.getProductById(productId);
             if (product == null) {
@@ -309,6 +329,7 @@ public class InventoryService {
             product.setUnit(unit);
             product.setSupplierName(supplierName);
             product.setReorderLevel(reorderLevel);
+            product.setEcoRating(ecoRating);
             
             return productRepo.updateProduct(product);
         } catch (Exception e) {

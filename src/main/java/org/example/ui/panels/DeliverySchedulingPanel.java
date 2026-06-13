@@ -85,7 +85,7 @@ public class DeliverySchedulingPanel extends JPanel {
         btnAssignAgent.setFocusPainted(false);
         btnAssignAgent.putClientProperty("JButton.buttonType", "roundRect");
         btnAssignAgent.putClientProperty("JButton.boldText", true);
-        btnAssignAgent.addActionListener(e -> handleAssignAgent());
+        btnAssignAgent.addActionListener(e -> handleAssignAgent((JButton) e.getSource()));
         assignForm.add(btnAssignAgent, gbc);
 
         add(assignForm, BorderLayout.WEST);
@@ -176,7 +176,7 @@ public class DeliverySchedulingPanel extends JPanel {
         }
     }
 
-    private void handleAssignAgent() {
+    private void handleAssignAgent(JButton btnAssignAgent) {
         OrderWrapper orderWrapper = (OrderWrapper) comboPendingOrders.getSelectedItem();
         AgentWrapper agentWrapper = (AgentWrapper) comboAvailableAgents.getSelectedItem();
 
@@ -189,23 +189,33 @@ public class DeliverySchedulingPanel extends JPanel {
             return;
         }
 
-        boolean success = orderService.assignDeliveryAgent(orderWrapper.getOrder().getMongoId(), agentWrapper.getAgent().getMongoId());
-        if (success) {
-            JOptionPane.showMessageDialog(this, "Delivery agent assigned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            boolean clientMail = EmailUtils.isLastEmailClientSuccess();
-            boolean agentMail = EmailUtils.isLastEmailAgentSuccess();
-            if (clientMail && agentMail) {
-                JOptionPane.showMessageDialog(this, "Emails sent to client and delivery agent successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
-            } else if (!clientMail && !agentMail) {
-                JOptionPane.showMessageDialog(this, "Failed to send emails to client and delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
-            } else if (!clientMail) {
-                JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to send email to delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
-            }
-            refreshCallback.run();
-        } else {
-            JOptionPane.showMessageDialog(this, "Failed to assign agent.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        btnAssignAgent.setEnabled(false);
+        btnAssignAgent.setText("Assigning Agent...");
+
+        java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            return orderService.assignDeliveryAgent(orderWrapper.getOrder().getMongoId(), agentWrapper.getAgent().getMongoId());
+        }).thenAcceptAsync(success -> {
+            SwingUtilities.invokeLater(() -> {
+                btnAssignAgent.setEnabled(true);
+                btnAssignAgent.setText("Assign Delivery Agent");
+                if (success) {
+                    JOptionPane.showMessageDialog(this, "Delivery agent assigned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    boolean clientMail = EmailUtils.isLastEmailClientSuccess();
+                    boolean agentMail = EmailUtils.isLastEmailAgentSuccess();
+                    if (clientMail && agentMail) {
+                        JOptionPane.showMessageDialog(this, "Emails sent to client and delivery agent successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+                    } else if (!clientMail && !agentMail) {
+                        JOptionPane.showMessageDialog(this, "Failed to send emails to client and delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
+                    } else if (!clientMail) {
+                        JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to send email to delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    refreshCallback.run();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to assign agent.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        });
     }
 }

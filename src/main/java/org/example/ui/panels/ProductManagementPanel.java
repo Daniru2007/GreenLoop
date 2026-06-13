@@ -26,6 +26,7 @@ public class ProductManagementPanel extends JPanel {
     private JTextField txtProdUnit;
     private JTextField txtProdSupplier;
     private JTextField txtProdReorderLevel;
+    private JComboBox<Integer> comboProdEcoRating;
 
     private JTable tableProducts;
     private DefaultTableModel modelProducts;
@@ -153,9 +154,22 @@ public class ProductManagementPanel extends JPanel {
         txtProdReorderLevel.putClientProperty("JComponent.roundRect", true);
         formPanel.add(txtProdReorderLevel, gbc);
 
-        // Row 8: Add Product Button
+        // Row 8: Eco-Rating
         gbc.gridx = 0;
         gbc.gridy = 8;
+        gbc.weightx = 0.0;
+        gbc.gridwidth = 1;
+        formPanel.add(UIStyleUtils.createStyledLabel("Eco-Rating (1-5):"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        comboProdEcoRating = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+        comboProdEcoRating.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        comboProdEcoRating.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(comboProdEcoRating, gbc);
+
+        // Row 9: Add Product Button
+        gbc.gridx = 0;
+        gbc.gridy = 9;
         gbc.gridwidth = 2;
         gbc.weightx = 1.0;
         gbc.insets = new Insets(15, 8, 8, 8);
@@ -176,7 +190,7 @@ public class ProductManagementPanel extends JPanel {
                 " Product Inventory ", TitledBorder.LEFT, TitledBorder.TOP,
                 new Font("Segoe UI", Font.BOLD, 14)));
 
-        String[] columns = {"Product ID", "Name", "Category", "Material", "Price", "Stock", "Unit", "Supplier", "Reorder Level","Stock Status"};
+        String[] columns = {"Product ID", "Name", "Category", "Material", "Price", "Stock", "Unit", "Supplier", "Reorder Level", "Eco-Rating", "Stock Status"};
         modelProducts = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -221,7 +235,7 @@ public class ProductManagementPanel extends JPanel {
                     }
                 });
 
-        tableProducts.getColumnModel().getColumn(9)
+        tableProducts.getColumnModel().getColumn(10)
                 .setCellRenderer(new DefaultTableCellRenderer() {
                     @Override
                     public Component getTableCellRendererComponent(
@@ -336,12 +350,18 @@ public class ProductManagementPanel extends JPanel {
                         p.getUnit(),
                         p.getSupplierName(),
                         p.getReorderLevel(),
+                        getStars(p.getEcoRating()),
                         stockStatus
                 });
             }
         } catch (Exception e) {
             System.err.println("Error reloading products table: " + e.getMessage());
         }
+    }
+
+    private String getStars(int rating) {
+        int r = Math.max(1, Math.min(5, rating));
+        return r + "/5";
     }
 
     private String getStr(Object val) {
@@ -368,8 +388,9 @@ public class ProductManagementPanel extends JPanel {
             double price = Double.parseDouble(priceStr);
             int stock = Integer.parseInt(stockStr);
             int reorder = Integer.parseInt(reorderStr);
+            int ecoRating = (Integer) comboProdEcoRating.getSelectedItem();
 
-            Product saved = productController.addProduct(name, category, material, price, stock, unit, supplier, reorder);
+            Product saved = productController.addProduct(name, category, material, price, stock, unit, supplier, reorder, ecoRating);
             if (saved != null) {
                 JOptionPane.showMessageDialog(this, "Product registered successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
                 // Clear fields
@@ -381,6 +402,7 @@ public class ProductManagementPanel extends JPanel {
                 txtProdUnit.setText("");
                 txtProdSupplier.setText("");
                 txtProdReorderLevel.setText("");
+                comboProdEcoRating.setSelectedIndex(0);
 
                 refreshCallback.run();
             } else {
@@ -432,9 +454,20 @@ public class ProductManagementPanel extends JPanel {
         String currentUnit = getStr(modelProducts.getValueAt(selectedRow, 6));
         String currentSupplier = getStr(modelProducts.getValueAt(selectedRow, 7));
         String currentReorder = getStr(modelProducts.getValueAt(selectedRow, 8));
+        String currentEcoStars = getStr(modelProducts.getValueAt(selectedRow, 9));
+        int currentEcoRating = 3;
+        try {
+            if (currentEcoStars.contains("/")) {
+                currentEcoRating = Integer.parseInt(currentEcoStars.split("/")[0].trim());
+            } else {
+                currentEcoRating = Math.max(1, Math.min(5, currentEcoStars.length()));
+            }
+        } catch (Exception e) {
+            // fallback
+        }
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Update Product Details", true);
-        dialog.setSize(520, 500);
+        dialog.setSize(520, 540);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(15, 15));
 
@@ -517,6 +550,16 @@ public class ProductManagementPanel extends JPanel {
         txtReorder.putClientProperty("JComponent.roundRect", true);
         formPanel.add(txtReorder, gbc);
 
+        // Eco-Rating
+        gbc.gridx = 0; gbc.gridy = 8; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Eco-Rating (1-5):"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JComboBox<Integer> comboEco = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+        comboEco.setSelectedItem(currentEcoRating);
+        comboEco.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        comboEco.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(comboEco, gbc);
+
         // Submit Button
         JButton btnSubmit = new JButton("Save Changes");
         btnSubmit.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -532,6 +575,7 @@ public class ProductManagementPanel extends JPanel {
             String unit = txtUnit.getText().trim();
             String supplier = txtSupplier.getText().trim();
             String reorderStr = txtReorder.getText().trim();
+            int ecoRating = (Integer) comboEco.getSelectedItem();
 
             if (name.isEmpty() || category.isEmpty() || material.isEmpty() ||
                     priceStr.isEmpty() || stockStr.isEmpty() || unit.isEmpty() ||
@@ -551,7 +595,7 @@ public class ProductManagementPanel extends JPanel {
                 }
 
                 Product updated = productController.updateProduct(
-                        productId, name, category, material, price, stock, unit, supplier, reorder
+                        productId, name, category, material, price, stock, unit, supplier, reorder, ecoRating
                 );
 
                 if (updated != null) {

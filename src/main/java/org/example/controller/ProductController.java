@@ -30,8 +30,17 @@ public class ProductController {
     public Product addProduct(String name, String category, String material,
                               double price, int initialStock, String unit,
                               String supplierName, int reorderLevel) {
+        return addProduct(name, category, material, price, initialStock, unit, supplierName, reorderLevel, 1);
+    }
+
+    /**
+     * Add a new product with ecoRating
+     */
+    public Product addProduct(String name, String category, String material,
+                              double price, int initialStock, String unit,
+                              String supplierName, int reorderLevel, int ecoRating) {
         return inventoryService.registerProduct(name, category, material, price,
-                initialStock, unit, supplierName, reorderLevel);
+                initialStock, unit, supplierName, reorderLevel, ecoRating);
     }
 
     /**
@@ -40,11 +49,21 @@ public class ProductController {
     public Product updateProduct(String productId, String name, String category, String material, double price, int stock,
                                  String unit, String supplier, int reorderLevel) {
         Product existing = getProductById(productId);
+        int currentEcoRating = existing != null ? existing.getEcoRating() : 1;
+        return updateProduct(productId, name, category, material, price, stock, unit, supplier, reorderLevel, currentEcoRating);
+    }
+
+    /**
+     * Update product details with eco-rating
+     */
+    public Product updateProduct(String productId, String name, String category, String material, double price, int stock,
+                                 String unit, String supplier, int reorderLevel, int ecoRating) {
+        Product existing = getProductById(productId);
         if (existing == null) {
             return null;
         }
 
-        Product updated = inventoryService.updateProductDetails(productId, name, category, material, price, unit, supplier, reorderLevel);
+        Product updated = inventoryService.updateProductDetails(productId, name, category, material, price, unit, supplier, reorderLevel, ecoRating);
 
         if (updated != null && existing.getStockQuantity() != stock) {
             int diff = stock - existing.getStockQuantity();

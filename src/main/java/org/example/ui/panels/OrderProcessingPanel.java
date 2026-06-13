@@ -1,11 +1,13 @@
 package org.example.ui.panels;
 
+import org.example.controller.ClientController;
 import org.example.controller.OrderService;
 import org.example.controller.ProductController;
 import org.example.model.CustomerOrder;
 import org.example.model.Product;
 import org.example.ui.UIStyleUtils;
 import org.example.ui.wrappers.ProductWrapper;
+import org.example.ui.wrappers.ClientWrapper;
 import org.example.utils.EmailUtils;
 import org.example.model.OrderItem;
 import java.awt.event.MouseAdapter;
@@ -28,8 +30,10 @@ public class OrderProcessingPanel extends JPanel {
 
     private final OrderService orderService;
     private final ProductController productController;
+    private final ClientController clientController;
     private final Runnable refreshCallback;
-
+ 
+    private JComboBox<Object> comboClients;
     private JTextField txtClientName;
     private JTextField txtClientEmail;
     private JTextField txtClientPhone;
@@ -46,9 +50,10 @@ public class OrderProcessingPanel extends JPanel {
     private JTable tableOrders;
     private DefaultTableModel modelOrders;
 
-    public OrderProcessingPanel(OrderService orderService, ProductController productController, Runnable refreshCallback) {
+    public OrderProcessingPanel(OrderService orderService, ProductController productController, ClientController clientController, Runnable refreshCallback) {
         this.orderService = orderService;
         this.productController = productController;
+        this.clientController = clientController;
         this.refreshCallback = refreshCallback;
 
         setLayout(new BorderLayout(15, 15));
@@ -66,8 +71,18 @@ public class OrderProcessingPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Row 0: Client Name
+        // Row 0: Select Client Dropdown
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Select Client:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        comboClients = new JComboBox<>();
+        comboClients.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        comboClients.putClientProperty("JComponent.roundRect", true);
+        comboClients.addActionListener(e -> handleClientSelection());
+        formPanel.add(comboClients, gbc);
+
+        // Row 1: Client Name
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Client Name:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         txtClientName = new JTextField();
@@ -76,8 +91,8 @@ public class OrderProcessingPanel extends JPanel {
         txtClientName.putClientProperty("JComponent.roundRect", true);
         formPanel.add(txtClientName, gbc);
 
-        // Row 1: Client Email
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
+        // Row 2: Client Email
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Client Email:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         txtClientEmail = new JTextField();
@@ -86,8 +101,8 @@ public class OrderProcessingPanel extends JPanel {
         txtClientEmail.putClientProperty("JComponent.roundRect", true);
         formPanel.add(txtClientEmail, gbc);
 
-        // Row 2: Client Phone
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
+        // Row 3: Client Phone
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Client Phone:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         txtClientPhone = new JTextField();
@@ -96,8 +111,8 @@ public class OrderProcessingPanel extends JPanel {
         txtClientPhone.putClientProperty("JComponent.roundRect", true);
         formPanel.add(txtClientPhone, gbc);
 
-        // Row 3: Client Address
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0;
+        // Row 4: Client Address
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Client Address:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         txtClientAddress = new JTextField();
@@ -106,8 +121,8 @@ public class OrderProcessingPanel extends JPanel {
         txtClientAddress.putClientProperty("JComponent.roundRect", true);
         formPanel.add(txtClientAddress, gbc);
 
-        // Row 4: Product Selection
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0.0;
+        // Row 5: Product Selection
+        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Select Product:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         comboProducts = new JComboBox<>();
@@ -116,8 +131,8 @@ public class OrderProcessingPanel extends JPanel {
         comboProducts.addActionListener(e -> updateCalculations());
         formPanel.add(comboProducts, gbc);
 
-        // Row 5: Quantity
-        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0.0;
+        // Row 6: Quantity
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Quantity Ordered:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         spinQuantity = new JSpinner(new SpinnerNumberModel(1, 1, 1000, 1));
@@ -126,24 +141,24 @@ public class OrderProcessingPanel extends JPanel {
         spinQuantity.addChangeListener(e -> updateCalculations());
         formPanel.add(spinQuantity, gbc);
 
-        // Row 6: Available Stock
-        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0.0;
+        // Row 7: Available Stock
+        gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Available Stock:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         lblStockAvailable = new JLabel("-");
         lblStockAvailable.setFont(new Font("Segoe UI", Font.BOLD, 13));
         formPanel.add(lblStockAvailable, gbc);
 
-        // Row 7: Unit Price
-        gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0.0;
+        // Row 8: Unit Price
+        gbc.gridx = 0; gbc.gridy = 8; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Unit Price:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         lblUnitPrice = new JLabel("Rs. 0.00");
         lblUnitPrice.setFont(new Font("Segoe UI", Font.BOLD, 13));
         formPanel.add(lblUnitPrice, gbc);
 
-        // Row 8: Item Total (Total Amount)
-        gbc.gridx = 0; gbc.gridy = 8; gbc.weightx = 0.0;
+        // Row 9: Item Total (Total Amount)
+        gbc.gridx = 0; gbc.gridy = 9; gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Item Total:"), gbc);
         gbc.gridx = 1; gbc.weightx = 1.0;
         lblTotalAmount = new JLabel("Rs. 0.00");
@@ -151,8 +166,8 @@ public class OrderProcessingPanel extends JPanel {
         lblTotalAmount.setForeground(new Color(100, 200, 120));
         formPanel.add(lblTotalAmount, gbc);
 
-        // Row 9: Add to Cart Button
-        gbc.gridx = 0; gbc.gridy = 9; gbc.gridwidth = 2; gbc.weightx = 1.0;
+        // Row 10: Add to Cart Button
+        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2; gbc.weightx = 1.0;
         gbc.insets = new Insets(10, 8, 10, 8);
         JButton btnAddToCart = new JButton("Add to Cart");
         btnAddToCart.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -216,7 +231,7 @@ public class OrderProcessingPanel extends JPanel {
         btnPlaceOrder.setFocusPainted(false);
         btnPlaceOrder.putClientProperty("JButton.buttonType", "roundRect");
         btnPlaceOrder.putClientProperty("JButton.boldText", true);
-        btnPlaceOrder.addActionListener(e -> handlePlaceOrder());
+        btnPlaceOrder.addActionListener(e -> handlePlaceOrder((JButton) e.getSource()));
         formPanel.add(btnPlaceOrder, gbc);
 
         add(formPanel, BorderLayout.WEST);
@@ -276,7 +291,7 @@ public class OrderProcessingPanel extends JPanel {
         btnCompleteDelivery.setBackground(new Color(30, 100, 160));
         btnCompleteDelivery.setForeground(Color.WHITE);
         btnCompleteDelivery.putClientProperty("JButton.buttonType", "roundRect");
-        btnCompleteDelivery.addActionListener(e -> handleCompleteDelivery());
+        btnCompleteDelivery.addActionListener(e -> handleCompleteDelivery((JButton) e.getSource()));
         actionToolbar.add(btnCompleteDelivery);
  
         JButton btnCancelOrder = new JButton("Cancel Order");
@@ -284,7 +299,7 @@ public class OrderProcessingPanel extends JPanel {
         btnCancelOrder.setBackground(new Color(160, 50, 50));
         btnCancelOrder.setForeground(Color.WHITE);
         btnCancelOrder.putClientProperty("JButton.buttonType", "roundRect");
-        btnCancelOrder.addActionListener(e -> handleCancelOrder());
+        btnCancelOrder.addActionListener(e -> handleCancelOrder((JButton) e.getSource()));
         actionToolbar.add(btnCancelOrder);
  
         JButton btnRefreshOrders = new JButton("Refresh");
@@ -311,6 +326,7 @@ public class OrderProcessingPanel extends JPanel {
     public void refreshData() {
         refreshOrdersTable();
         refreshProductsCombo();
+        refreshClientsCombo();
     }
 
     private void refreshOrdersTable() {
@@ -374,7 +390,36 @@ public class OrderProcessingPanel extends JPanel {
         lblTotalAmount.setText(String.format("Rs. %.2f", total));
     }
 
-    private void handlePlaceOrder() {
+    private void refreshClientsCombo() {
+        comboClients.removeAllItems();
+        comboClients.addItem(" -- Select Registered Client (or Type Below) -- ");
+        try {
+            List<org.example.model.Client> clients = clientController.getAllClients();
+            for (org.example.model.Client c : clients) {
+                comboClients.addItem(new org.example.ui.wrappers.ClientWrapper(c));
+            }
+        } catch (Exception e) {
+            System.err.println("Error reloading clients combo: " + e.getMessage());
+        }
+    }
+
+    private void handleClientSelection() {
+        Object item = comboClients.getSelectedItem();
+        if (item instanceof org.example.ui.wrappers.ClientWrapper) {
+            org.example.model.Client c = ((org.example.ui.wrappers.ClientWrapper) item).getClient();
+            txtClientName.setText(c.getName());
+            txtClientEmail.setText(c.getEmail());
+            txtClientPhone.setText(c.getPhone());
+            txtClientAddress.setText(c.getAddress());
+        } else {
+            txtClientName.setText("");
+            txtClientEmail.setText("");
+            txtClientPhone.setText("");
+            txtClientAddress.setText("");
+        }
+    }
+
+    private void handlePlaceOrder(JButton btnPlaceOrder) {
         String clientName = txtClientName.getText().trim();
         if (clientName.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please enter client name.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -411,26 +456,34 @@ public class OrderProcessingPanel extends JPanel {
             items.add(new org.example.model.OrderItem(pId, pName, qty, 0.0));
         }
 
-        CustomerOrder order = orderService.placeOrder(items, clientName, clientEmail, clientPhone, clientAddress, LocalDate.now());
-        if (order != null) {
-            JOptionPane.showMessageDialog(this, "Order placed successfully! Total: Rs. " + String.format("%.2f", order.getTotalAmount()), "Success", JOptionPane.INFORMATION_MESSAGE);
-            if (EmailUtils.isLastEmailClientSuccess()) {
-                JOptionPane.showMessageDialog(this, "Email sent to client successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
-            }
-            txtClientName.setText("");
-            txtClientEmail.setText("");
-            txtClientPhone.setText("");
-            txtClientAddress.setText("");
-            spinQuantity.setValue(1);
-            modelCart.setRowCount(0);
-            updateCartTotal();
-            refreshCallback.run();
-        } else {
-            JOptionPane.showMessageDialog(this, "Failed to place order. Check logs for details.", 
-                    "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        btnPlaceOrder.setEnabled(false);
+        btnPlaceOrder.setText("Placing Order...");
+
+        java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            return orderService.placeOrder(items, clientName, clientEmail, clientPhone, clientAddress, LocalDate.now());
+        }).thenAcceptAsync(order -> {
+            SwingUtilities.invokeLater(() -> {
+                btnPlaceOrder.setEnabled(true);
+                btnPlaceOrder.setText("Place Client Order");
+                if (order != null) {
+                    JOptionPane.showMessageDialog(this, "Order placed successfully! Total: Rs. " + String.format("%.2f", order.getTotalAmount()), "Success", JOptionPane.INFORMATION_MESSAGE);
+                    txtClientName.setText("");
+                    txtClientEmail.setText("");
+                    txtClientPhone.setText("");
+                    txtClientAddress.setText("");
+                    if (comboClients.getItemCount() > 0) {
+                        comboClients.setSelectedIndex(0);
+                    }
+                    spinQuantity.setValue(1);
+                    modelCart.setRowCount(0);
+                    updateCartTotal();
+                    refreshCallback.run();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to place order. Check logs for details.", 
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        });
     }
 
     private void handleAddToCart() {
@@ -513,7 +566,7 @@ public class OrderProcessingPanel extends JPanel {
         lblCartTotal.setText(String.format("Order Total: Rs. %.2f", total));
     }
 
-    private void handleCompleteDelivery() {
+    private void handleCompleteDelivery(JButton btnCompleteDelivery) {
         int selectedRow = tableOrders.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Please select an order from the table to complete delivery.", 
@@ -537,22 +590,26 @@ public class OrderProcessingPanel extends JPanel {
         int confirm = JOptionPane.showConfirmDialog(this, "Mark Order #" + orderId + " as delivered?", 
                 "Confirm Delivery", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = orderService.completeDelivery(orderId);
-            if (success) {
-                JOptionPane.showMessageDialog(this, "Delivery marked completed!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                if (EmailUtils.isLastEmailClientSuccess()) {
-                    JOptionPane.showMessageDialog(this, "Email sent to client successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
-                }
-                refreshCallback.run();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to complete delivery.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            btnCompleteDelivery.setEnabled(false);
+            btnCompleteDelivery.setText("Marking Delivered...");
+            java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                return orderService.completeDelivery(orderId);
+            }).thenAcceptAsync(success -> {
+                SwingUtilities.invokeLater(() -> {
+                    btnCompleteDelivery.setEnabled(true);
+                    btnCompleteDelivery.setText("Complete Delivery");
+                    if (success) {
+                        JOptionPane.showMessageDialog(this, "Delivery marked completed!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        refreshCallback.run();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to complete delivery.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            });
         }
     }
 
-    private void handleCancelOrder() {
+    private void handleCancelOrder(JButton btnCancelOrder) {
         int selectedRow = tableOrders.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Please select an order from the table to cancel.", 
@@ -572,13 +629,22 @@ public class OrderProcessingPanel extends JPanel {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to cancel Order #" + orderId + "?\nStock will be refunded and agent will be released.", 
                 "Confirm Cancel", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = orderService.cancelOrder(orderId);
-            if (success) {
-                JOptionPane.showMessageDialog(this, "Order cancelled and stock refunded!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                refreshCallback.run();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to cancel order.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            btnCancelOrder.setEnabled(false);
+            btnCancelOrder.setText("Cancelling...");
+            java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                return orderService.cancelOrder(orderId);
+            }).thenAcceptAsync(success -> {
+                SwingUtilities.invokeLater(() -> {
+                    btnCancelOrder.setEnabled(true);
+                    btnCancelOrder.setText("Cancel Order");
+                    if (success) {
+                        JOptionPane.showMessageDialog(this, "Order cancelled and stock refunded!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        refreshCallback.run();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to cancel order.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            });
         }
     }
 

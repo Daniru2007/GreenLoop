@@ -11,6 +11,7 @@ public class Product {
     private String unit;        // e.g. kg, pack, roll
     private String supplierName;
     private int reorderLevel;   // -stock alert triggers beloloww this
+    private int ecoRating;      // Eco-Rating from 1 to 5 stars
 
     public Product() {}
 
@@ -25,6 +26,13 @@ public class Product {
         this.unit         = unit;
         this.supplierName = supplierName;
         this.reorderLevel = reorderLevel;
+    }
+
+    public Product(String name, String category, String material,
+                   double price, int stockQuantity, String unit,
+                   String supplierName, int reorderLevel, int ecoRating) {
+        this(name, category, material, price, stockQuantity, unit, supplierName, reorderLevel);
+        this.ecoRating = ecoRating;
     }
 
 
@@ -54,6 +62,9 @@ public class Product {
 
     public int getReorderLevel()                     { return reorderLevel; }
     public void setReorderLevel(int reorderLevel)    { this.reorderLevel = reorderLevel; }
+
+    public int getEcoRating()                        { return ecoRating; }
+    public void setEcoRating(int ecoRating)          { this.ecoRating = ecoRating; }
 
     @Override
     public String toString() {

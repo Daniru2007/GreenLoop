@@ -43,7 +43,8 @@ public class ProductRepositoryImpl implements ProductRepository {
                     .append("stock_quantity", product.getStockQuantity())
                     .append("unit", product.getUnit())
                     .append("supplier_name", product.getSupplierName())
-                    .append("reorder_level", product.getReorderLevel());
+                    .append("reorder_level", product.getReorderLevel())
+                    .append("eco_rating", product.getEcoRating());
 
             collection.insertOne(doc);
             product.setMongoId(doc.getObjectId("_id").toString());
@@ -70,7 +71,8 @@ public class ProductRepositoryImpl implements ProductRepository {
                             Updates.set("stock_quantity", product.getStockQuantity()),
                             Updates.set("unit", product.getUnit()),
                             Updates.set("supplier_name", product.getSupplierName()),
-                            Updates.set("reorder_level", product.getReorderLevel())
+                            Updates.set("reorder_level", product.getReorderLevel()),
+                            Updates.set("eco_rating", product.getEcoRating())
                     )
             );
             return product;
@@ -218,6 +220,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         p.setUnit(doc.getString("unit"));
         p.setSupplierName(doc.getString("supplier_name"));
         p.setReorderLevel(doc.get("reorder_level") != null ? ((Number) doc.get("reorder_level")).intValue() : 0);
+        p.setEcoRating(doc.getInteger("eco_rating", 1));
         return p;
     }
 }

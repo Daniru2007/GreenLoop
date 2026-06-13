@@ -1,12 +1,16 @@
 package org.example.model;
 
 public class Client {
+    private String mongoId;
     private String name;
     private String email;
     private String phone;
     private String address;
 
     public Client() {}
+
+    public String getMongoId() { return mongoId; }
+    public void setMongoId(String mongoId) { this.mongoId = mongoId; }
 
     public Client(String name, String email, String phone, String address) {
         this.name = name;

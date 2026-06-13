@@ -8,6 +8,7 @@ import org.example.controller.DeliveryAgentController;
 import org.example.controller.OrderService;
 import org.example.controller.ProductController;
 import org.example.controller.ReportController;
+import org.example.controller.ClientController;
 import org.example.model.CustomerOrder;
 import org.example.ui.panels.*;
 
@@ -23,6 +24,7 @@ public class OrderManagementGUI extends JFrame {
     private final DeliveryAgentImpl agentRepo;
     private final DeliveryAgentController agentController;
     private final ReportController reportController;
+    private final ClientController clientController;
 
     // Dashboard Stat Labels
     private JLabel lblStatPending;
@@ -36,6 +38,7 @@ public class OrderManagementGUI extends JFrame {
     private ProductManagementPanel productManagementPanel;
     private DeliveryAgentPanel deliveryAgentPanel;
     private ReportPanel reportPanel;
+    private ClientManagementPanel clientManagementPanel;
 
     public OrderManagementGUI() {
         // Initialize services
@@ -44,6 +47,7 @@ public class OrderManagementGUI extends JFrame {
         agentRepo = new DeliveryAgentImpl();
         agentController = new DeliveryAgentController();
         reportController = new ReportController();
+        clientController = new ClientController();
 
         // Frame Setup
         setTitle("GreenLoop - Order & Delivery Management System");
@@ -76,12 +80,13 @@ public class OrderManagementGUI extends JFrame {
 
         // Instantiate panel components and link refresh callbacks
         Runnable refreshCallback = this::refreshAllData;
-        orderProcessingPanel = new OrderProcessingPanel(orderService, productController, refreshCallback);
+        orderProcessingPanel = new OrderProcessingPanel(orderService, productController, clientController, refreshCallback);
         deliverySchedulingPanel = new DeliverySchedulingPanel(orderService, agentRepo, refreshCallback);
         agentRegistrationPanel = new AgentRegistrationPanel(agentRepo, refreshCallback);
         productManagementPanel = new ProductManagementPanel(productController, refreshCallback);
         deliveryAgentPanel = new DeliveryAgentPanel(agentController, refreshCallback);
         reportPanel = new ReportPanel(reportController, refreshCallback);
+        clientManagementPanel = new ClientManagementPanel(clientController, refreshCallback);
 
         // Create Tabs
         tabbedPane.addTab("Order Processing", orderProcessingPanel);
@@ -89,6 +94,7 @@ public class OrderManagementGUI extends JFrame {
 //        tabbedPane.addTab("Add Delivery Agent", agentRegistrationPanel);
         tabbedPane.addTab("Product Management", productManagementPanel);
         tabbedPane.addTab("Manage Delivery Agents", deliveryAgentPanel);
+        tabbedPane.addTab("Manage Clients", clientManagementPanel);
         tabbedPane.addTab("Generate Reports", reportPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
@@ -156,12 +162,13 @@ public class OrderManagementGUI extends JFrame {
         card.add(valueLabel, BorderLayout.CENTER);
         return card;
     }
-    g
+    
     private void refreshAllData() {
         if (orderProcessingPanel != null) orderProcessingPanel.refreshData();
         if (deliverySchedulingPanel != null) deliverySchedulingPanel.refreshData();
         if (productManagementPanel != null) productManagementPanel.refreshData();
         if (deliveryAgentPanel != null) deliveryAgentPanel.refreshData();
+        if (clientManagementPanel != null) clientManagementPanel.refreshData();
         if (reportPanel != null) reportPanel.refreshData();
 
         updateDashboardStats();

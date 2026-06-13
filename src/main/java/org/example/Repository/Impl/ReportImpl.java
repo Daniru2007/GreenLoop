@@ -199,6 +199,7 @@ public class ReportImpl implements ReportRepository {
         p.setUnit(doc.getString("unit"));
         p.setSupplierName(doc.getString("supplier_name"));
         p.setReorderLevel(doc.get("reorder_level") != null ? ((Number) doc.get("reorder_level")).intValue() : 0);
+        p.setEcoRating(doc.getInteger("eco_rating", 1));
         return p;
     }
 

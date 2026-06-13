@@ -148,8 +148,6 @@ public class OrderService {
                     auditRepo.addAuditLog(audit);
                 }
 
-                // Notify Client
-                EmailUtils.sendEmailForClient(customerEmail, savedOrder);
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {
@@ -258,10 +256,6 @@ public class OrderService {
             }
 
             if (updatedOrder != null) {
-                String clientEmail = (order.getClient() != null && order.getClient().getEmail() != null && !order.getClient().getEmail().isEmpty())
-                        ? order.getClient().getEmail()
-                        : order.getCustomerName().toLowerCase().replaceAll("\\s+", "") + "@example.com";
-                EmailUtils.sendEmailForClient(clientEmail, order);
                 System.out.println("[OrderService] Order " + orderId + " delivered successfully!");
                 return true;
             }
