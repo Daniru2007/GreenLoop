@@ -39,9 +39,19 @@ public class ProductController {
      */
     public Product updateProduct(String productId, String name, String category, String material, double price, int stock,
                                  String unit, String supplier, int reorderLevel) {
-        return updateProduct(productId, name, category, material, price, stock,
-                unit, supplier, reorderLevel);
+        Product existing = getProductById(productId);
+        if (existing == null) {
+            return null;
+        }
 
+        Product updated = inventoryService.updateProductDetails(productId, name, category, material, price, unit, supplier, reorderLevel);
+
+        if (updated != null && existing.getStockQuantity() != stock) {
+            int diff = stock - existing.getStockQuantity();
+            inventoryService.adjustStock(productId, diff, "Manual adjustment during product details update");
+            updated.setStockQuantity(stock);
+        }
+        return updated;
     }
 
     /**

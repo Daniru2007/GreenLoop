@@ -189,38 +189,67 @@ public class ProductManagementPanel extends JPanel {
         tableProducts.setShowHorizontalLines(true);
         tableProducts.setShowVerticalLines(false);
         tableProducts.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        tableProducts.getColumnModel().getColumn(9)
+        tableProducts.getColumnModel().getColumn(5)
                 .setCellRenderer(new DefaultTableCellRenderer() {
-
                     @Override
                     public Component getTableCellRendererComponent(
                             JTable table, Object value,
                             boolean isSelected, boolean hasFocus,
                             int row, int column) {
-
-                        Component c = super.getTableCellRendererComponent(
-                                table, value, isSelected, hasFocus, row, column);
-
+                        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                         if (value != null) {
-                            String status = value.toString();
-
-                            if (status.contains("Out of Stock")) {
-                                c.setForeground(Color.RED);
-                            }
-                            else if (status.contains("Low Stock")) {
-                                c.setForeground(Color.ORANGE);
-                            }
-                            else if (status.contains("Moderate Stock")) {
-                                c.setForeground(Color.YELLOW);
-                            }
-                            else {
-                                c.setForeground(new Color(0, 180, 0));
+                            try {
+                                int stock = Integer.parseInt(value.toString());
+                                Object reorderVal = table.getValueAt(row, 8);
+                                int reorderLevel = reorderVal != null ? Integer.parseInt(reorderVal.toString()) : 0;
+                                if (stock == 0) {
+                                    c.setForeground(Color.RED);
+                                    c.setFont(c.getFont().deriveFont(Font.BOLD));
+                                } else if (stock <= reorderLevel) {
+                                    c.setForeground(Color.ORANGE);
+                                    c.setFont(c.getFont().deriveFont(Font.BOLD));
+                                } else {
+                                    c.setForeground(isSelected ? table.getSelectionForeground() : table.getForeground());
+                                    c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                                }
+                            } catch (NumberFormatException ex) {
+                                c.setForeground(isSelected ? table.getSelectionForeground() : table.getForeground());
+                                c.setFont(c.getFont().deriveFont(Font.PLAIN));
                             }
                         }
-
                         return c;
                     }
                 });
+
+        tableProducts.getColumnModel().getColumn(9)
+                .setCellRenderer(new DefaultTableCellRenderer() {
+                    @Override
+                    public Component getTableCellRendererComponent(
+                            JTable table, Object value,
+                            boolean isSelected, boolean hasFocus,
+                            int row, int column) {
+                        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                        if (value != null) {
+                            String status = value.toString();
+                            if (status.contains("Out of Stock")) {
+                                c.setForeground(Color.RED);
+                                c.setFont(c.getFont().deriveFont(Font.BOLD));
+                            } else if (status.contains("Low Stock")) {
+                                c.setForeground(Color.ORANGE);
+                                c.setFont(c.getFont().deriveFont(Font.BOLD));
+                            } else if (status.contains("Moderate Stock")) {
+                                c.setForeground(Color.YELLOW);
+                                c.setFont(c.getFont().deriveFont(Font.BOLD));
+                            } else {
+                                c.setForeground(new Color(0, 180, 0));
+                                c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                            }
+                        }
+                        return c;
+                    }
+                });
+
+
         JScrollPane scrollPane = new JScrollPane(tableProducts);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
@@ -244,6 +273,22 @@ public class ProductManagementPanel extends JPanel {
         btnUpdateProduct.addActionListener(e -> handleUpdateProduct());
         actionToolbar.add(btnUpdateProduct);
 
+
+        JButton btnStockIn = new JButton("Stock-In");
+        btnStockIn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnStockIn.setBackground(new Color(46, 111, 64));
+        btnStockIn.setForeground(Color.WHITE);
+        btnStockIn.putClientProperty("JButton.buttonType", "roundRect");
+        btnStockIn.addActionListener(e -> handleStockIn());
+        actionToolbar.add(btnStockIn);
+
+        JButton btnAdjustStock = new JButton("Adjust Stock");
+        btnAdjustStock.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnAdjustStock.setBackground(new Color(212, 136, 32));
+        btnAdjustStock.setForeground(Color.WHITE);
+        btnAdjustStock.putClientProperty("JButton.buttonType", "roundRect");
+        btnAdjustStock.addActionListener(e -> handleAdjustStock());
+        actionToolbar.add(btnAdjustStock);
 
         JButton btnRefreshProducts = new JButton("Refresh");
         btnRefreshProducts.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -297,6 +342,10 @@ public class ProductManagementPanel extends JPanel {
         } catch (Exception e) {
             System.err.println("Error reloading products table: " + e.getMessage());
         }
+    }
+
+    private String getStr(Object val) {
+        return val == null ? "" : val.toString();
     }
 
     private void handleAddProduct() {
@@ -366,69 +415,404 @@ public class ProductManagementPanel extends JPanel {
 
     private void handleUpdateProduct() {
         int selectedRow = tableProducts.getSelectedRow();
-
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Select a product to update.", "Warning", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a product from the table to update.", "Select Product", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         String productId = modelProducts.getValueAt(selectedRow, 0).toString();
+        String currentName = getStr(modelProducts.getValueAt(selectedRow, 1));
+        String currentCategory = getStr(modelProducts.getValueAt(selectedRow, 2));
+        String currentMaterial = getStr(modelProducts.getValueAt(selectedRow, 3));
+        
+        String currentPrice = getStr(modelProducts.getValueAt(selectedRow, 4));
+        currentPrice = currentPrice.replace("Rs.", "").replace("Rs. ", "").trim();
+        
+        String currentStock = getStr(modelProducts.getValueAt(selectedRow, 5));
+        String currentUnit = getStr(modelProducts.getValueAt(selectedRow, 6));
+        String currentSupplier = getStr(modelProducts.getValueAt(selectedRow, 7));
+        String currentReorder = getStr(modelProducts.getValueAt(selectedRow, 8));
 
-        String name = txtProdName.getText().trim();
-        String category = txtProdCategory.getText().trim();
-        String material = txtProdMaterial.getText().trim();
-        String priceStr = txtProdPrice.getText().trim();
-        String stockStr = txtProdStock.getText().trim();
-        String unit = txtProdUnit.getText().trim();
-        String supplier = txtProdSupplier.getText().trim();
-        String reorderStr = txtProdReorderLevel.getText().trim();
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Update Product Details", true);
+        dialog.setSize(520, 500);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(15, 15));
 
-        // ✅ validation
-        if (name.isEmpty() || category.isEmpty() || material.isEmpty() ||
-                priceStr.isEmpty() || stockStr.isEmpty() || unit.isEmpty() ||
-                supplier.isEmpty() || reorderStr.isEmpty()) {
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
 
-            JOptionPane.showMessageDialog(this, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+        // Name
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Product Name:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtName = new JTextField(currentName);
+        txtName.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtName.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtName, gbc);
 
-        try {
-            // ✅ safe price parsing (handles Rs. properly)
-            String cleanPrice = priceStr.replace("Rs.", "").replace("Rs. ", "").trim();
-            double price = Double.parseDouble(cleanPrice);
+        // Category
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Category:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtCategory = new JTextField(currentCategory);
+        txtCategory.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtCategory.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtCategory, gbc);
 
-            int stock = Integer.parseInt(stockStr.trim());
-            int reorder = Integer.parseInt(reorderStr.trim());
+        // Material
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Material:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtMaterial = new JTextField(currentMaterial);
+        txtMaterial.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtMaterial.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtMaterial, gbc);
 
-            if (stock < 0 || reorder < 0) {
-                JOptionPane.showMessageDialog(this, "Stock and reorder level cannot be negative.");
+        // Price
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Unit Price (Rs):"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtPrice = new JTextField(currentPrice);
+        txtPrice.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtPrice.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtPrice, gbc);
+
+        // Stock
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Stock Quantity:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtStock = new JTextField(currentStock);
+        txtStock.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtStock.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtStock, gbc);
+
+        // Unit
+        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Unit type:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtUnit = new JTextField(currentUnit);
+        txtUnit.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtUnit.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtUnit, gbc);
+
+        // Supplier
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Supplier Name:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtSupplier = new JTextField(currentSupplier);
+        txtSupplier.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtSupplier.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtSupplier, gbc);
+
+        // Reorder Level
+        gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0.0;
+        formPanel.add(UIStyleUtils.createStyledLabel("Reorder Level:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtReorder = new JTextField(currentReorder);
+        txtReorder.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtReorder.putClientProperty("JComponent.roundRect", true);
+        formPanel.add(txtReorder, gbc);
+
+        // Submit Button
+        JButton btnSubmit = new JButton("Save Changes");
+        btnSubmit.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnSubmit.setBackground(new Color(30, 90, 160));
+        btnSubmit.setForeground(Color.WHITE);
+        btnSubmit.putClientProperty("JButton.buttonType", "roundRect");
+        btnSubmit.addActionListener(e -> {
+            String name = txtName.getText().trim();
+            String category = txtCategory.getText().trim();
+            String material = txtMaterial.getText().trim();
+            String priceStr = txtPrice.getText().trim();
+            String stockStr = txtStock.getText().trim();
+            String unit = txtUnit.getText().trim();
+            String supplier = txtSupplier.getText().trim();
+            String reorderStr = txtReorder.getText().trim();
+
+            if (name.isEmpty() || category.isEmpty() || material.isEmpty() ||
+                    priceStr.isEmpty() || stockStr.isEmpty() || unit.isEmpty() ||
+                    supplier.isEmpty() || reorderStr.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            Product updated = productController.updateProduct(
-                    productId,
-                    name,
-                    category,
-                    material,
-                    price,
-                    stock,
-                    unit,
-                    supplier,
-                    reorder
-            );
-            if (updated != null) {
-                JOptionPane.showMessageDialog(this, "Product updated successfully!");
-                refreshCallback.run();
-            } else {
-                JOptionPane.showMessageDialog(this, "Update failed!");
+            try {
+                double price = Double.parseDouble(priceStr);
+                int stock = Integer.parseInt(stockStr);
+                int reorder = Integer.parseInt(reorderStr);
+
+                if (stock < 0 || reorder < 0) {
+                    JOptionPane.showMessageDialog(dialog, "Stock and reorder level cannot be negative.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                Product updated = productController.updateProduct(
+                        productId, name, category, material, price, stock, unit, supplier, reorder
+                );
+
+                if (updated != null) {
+                    JOptionPane.showMessageDialog(dialog, "Product updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                    refreshCallback.run();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Update failed. Check database logs.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Price, Stock, and Reorder Level must be valid numbers.", "Format Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Cancel Button
+        JButton btnCancel = new JButton("Cancel");
+        btnCancel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnCancel.putClientProperty("JButton.buttonType", "roundRect");
+        btnCancel.addActionListener(e -> dialog.dispose());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        buttonPanel.add(btnCancel);
+        buttonPanel.add(btnSubmit);
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private void handleStockIn() {
+        int selectedRow = tableProducts.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a product from the table to perform stock-in.", "Select Product", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String productId = modelProducts.getValueAt(selectedRow, 0).toString();
+        String prodName = modelProducts.getValueAt(selectedRow, 1).toString();
+        String defaultSupplier = modelProducts.getValueAt(selectedRow, 7).toString();
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Receive Stock (Stock-In)", true);
+        dialog.setSize(420, 320);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Product Name
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Product:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtName = new JTextField(prodName);
+        txtName.setEditable(false);
+        txtName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        txtName.putClientProperty("JComponent.roundRect", true);
+        panel.add(txtName, gbc);
+
+        // Supplier
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Supplier:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtSupplier = new JTextField(defaultSupplier);
+        txtSupplier.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtSupplier.putClientProperty("JComponent.roundRect", true);
+        panel.add(txtSupplier, gbc);
+
+        // Quantity
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Quantity:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtQty = new JTextField();
+        txtQty.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtQty.putClientProperty("JComponent.roundRect", true);
+        txtQty.putClientProperty("JTextField.placeholderText", "e.g. 50");
+        panel.add(txtQty, gbc);
+
+        // Cost Per Unit
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Cost per Unit (Rs):"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtCost = new JTextField();
+        txtCost.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtCost.putClientProperty("JComponent.roundRect", true);
+        txtCost.putClientProperty("JTextField.placeholderText", "e.g. 850.00");
+        panel.add(txtCost, gbc);
+
+        // Submit Button
+        JButton btnSubmit = new JButton("Confirm Stock-In");
+        btnSubmit.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnSubmit.setBackground(new Color(46, 111, 64));
+        btnSubmit.setForeground(Color.WHITE);
+        btnSubmit.putClientProperty("JButton.buttonType", "roundRect");
+        btnSubmit.addActionListener(e -> {
+            String qtyStr = txtQty.getText().trim();
+            String costStr = txtCost.getText().trim();
+            String supplier = txtSupplier.getText().trim();
+
+            if (qtyStr.isEmpty() || costStr.isEmpty() || supplier.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please fill in all fields.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Price, Stock, or Reorder Level has invalid format.",
-                    "Format Error",
-                    JOptionPane.ERROR_MESSAGE);
+            try {
+                int qty = Integer.parseInt(qtyStr);
+                double cost = Double.parseDouble(costStr);
+
+                if (qty <= 0) {
+                    JOptionPane.showMessageDialog(dialog, "Quantity must be greater than 0.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                if (cost < 0) {
+                    JOptionPane.showMessageDialog(dialog, "Cost per unit cannot be negative.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = productController.receiveStockFromSupplier(productId, qty, supplier, cost);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Stock received and updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                    refreshCallback.run();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to receive stock. Check logs.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Quantity and Cost must be valid numbers.", "Format Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Cancel Button
+        JButton btnCancel = new JButton("Cancel");
+        btnCancel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnCancel.putClientProperty("JButton.buttonType", "roundRect");
+        btnCancel.addActionListener(e -> dialog.dispose());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        buttonPanel.add(btnCancel);
+        buttonPanel.add(btnSubmit);
+
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+
+    private void handleAdjustStock() {
+        int selectedRow = tableProducts.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a product from the table to adjust stock.", "Select Product", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
+        String productId = modelProducts.getValueAt(selectedRow, 0).toString();
+        String prodName = modelProducts.getValueAt(selectedRow, 1).toString();
+        String currentStockStr = modelProducts.getValueAt(selectedRow, 5).toString();
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Adjust Stock Quantity", true);
+        dialog.setSize(420, 320);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Product Name
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Product:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtName = new JTextField(prodName);
+        txtName.setEditable(false);
+        txtName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        txtName.putClientProperty("JComponent.roundRect", true);
+        panel.add(txtName, gbc);
+
+        // Current Stock
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Current Stock:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtCurrentStock = new JTextField(currentStockStr);
+        txtCurrentStock.setEditable(false);
+        txtCurrentStock.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtCurrentStock.putClientProperty("JComponent.roundRect", true);
+        panel.add(txtCurrentStock, gbc);
+
+        // Adjustment Quantity
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Adjustment (+/-):"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtAdjustment = new JTextField();
+        txtAdjustment.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtAdjustment.putClientProperty("JComponent.roundRect", true);
+        txtAdjustment.putClientProperty("JTextField.placeholderText", "e.g. -5 or 10");
+        panel.add(txtAdjustment, gbc);
+
+        // Reason
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0;
+        panel.add(UIStyleUtils.createStyledLabel("Reason:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        JTextField txtReason = new JTextField();
+        txtReason.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtReason.putClientProperty("JComponent.roundRect", true);
+        txtReason.putClientProperty("JTextField.placeholderText", "e.g. Damaged during logistics");
+        panel.add(txtReason, gbc);
+
+        // Submit Button
+        JButton btnSubmit = new JButton("Confirm Adjustment");
+        btnSubmit.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnSubmit.setBackground(new Color(212, 136, 32));
+        btnSubmit.setForeground(Color.WHITE);
+        btnSubmit.putClientProperty("JButton.buttonType", "roundRect");
+        btnSubmit.addActionListener(e -> {
+            String adjustStr = txtAdjustment.getText().trim();
+            String reason = txtReason.getText().trim();
+
+            if (adjustStr.isEmpty() || reason.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Please fill in all fields.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                int adjustment = Integer.parseInt(adjustStr);
+                int currentStock = Integer.parseInt(currentStockStr);
+
+                if (currentStock + adjustment < 0) {
+                    JOptionPane.showMessageDialog(dialog, "Total stock cannot become negative.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                boolean success = productController.adjustInventory(productId, adjustment, reason);
+                if (success) {
+                    JOptionPane.showMessageDialog(dialog, "Stock adjusted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                    refreshCallback.run();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Failed to adjust stock. Check logs.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Adjustment must be a valid integer.", "Format Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // Cancel Button
+        JButton btnCancel = new JButton("Cancel");
+        btnCancel.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnCancel.putClientProperty("JButton.buttonType", "roundRect");
+        btnCancel.addActionListener(e -> dialog.dispose());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        buttonPanel.add(btnCancel);
+        buttonPanel.add(btnSubmit);
+
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
 }
 

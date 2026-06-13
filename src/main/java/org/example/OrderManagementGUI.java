@@ -156,7 +156,7 @@ public class OrderManagementGUI extends JFrame {
         card.add(valueLabel, BorderLayout.CENTER);
         return card;
     }
-
+    g
     private void refreshAllData() {
         if (orderProcessingPanel != null) orderProcessingPanel.refreshData();
         if (deliverySchedulingPanel != null) deliverySchedulingPanel.refreshData();
