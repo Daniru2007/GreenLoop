@@ -1,5 +1,5 @@
 package org.example.ui.panels;
-
+import javax.swing.table.DefaultTableCellRenderer;
 import org.example.controller.ProductController;
 import org.example.model.Product;
 import org.example.ui.UIStyleUtils;
@@ -149,7 +149,7 @@ public class ProductManagementPanel extends JPanel {
                 " Product Inventory ", TitledBorder.LEFT, TitledBorder.TOP, 
                 new Font("Segoe UI", Font.BOLD, 14)));
 
-        String[] columns = {"Product ID", "Name", "Category", "Material", "Price", "Stock", "Unit", "Supplier", "Reorder Level"};
+        String[] columns = {"Product ID", "Name", "Category", "Material", "Price", "Stock", "Unit", "Supplier", "Reorder Level","Stock Status"};
         modelProducts = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -162,6 +162,38 @@ public class ProductManagementPanel extends JPanel {
         tableProducts.setShowHorizontalLines(true);
         tableProducts.setShowVerticalLines(false);
         tableProducts.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tableProducts.getColumnModel().getColumn(9)
+                .setCellRenderer(new DefaultTableCellRenderer() {
+
+                    @Override
+                    public Component getTableCellRendererComponent(
+                            JTable table, Object value,
+                            boolean isSelected, boolean hasFocus,
+                            int row, int column) {
+
+                        Component c = super.getTableCellRendererComponent(
+                                table, value, isSelected, hasFocus, row, column);
+
+                        if (value != null) {
+                            String status = value.toString();
+
+                            if (status.contains("Out of Stock")) {
+                                c.setForeground(Color.RED);
+                            }
+                            else if (status.contains("Low Stock")) {
+                                c.setForeground(Color.ORANGE);
+                            }
+                            else if (status.contains("Moderate Stock")) {
+                                c.setForeground(Color.YELLOW);
+                            }
+                            else {
+                                c.setForeground(new Color(0, 180, 0));
+                            }
+                        }
+
+                        return c;
+                    }
+                });
         JScrollPane scrollPane = new JScrollPane(tableProducts);
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
@@ -195,6 +227,23 @@ public class ProductManagementPanel extends JPanel {
         try {
             List<Product> products = productController.getAllProducts();
             for (Product p : products) {
+                int stock = p.getStockQuantity();
+                int reorderLevel = p.getReorderLevel();
+
+                String stockStatus;
+
+                if (stock == 0) {
+                    stockStatus = "Out of Stock";
+                }
+                else if (stock <= reorderLevel) {
+                    stockStatus = "Low Stock (RL: " + reorderLevel + ")";
+                }
+                else if (stock <= reorderLevel * 2) {
+                    stockStatus = "Moderate Stock";
+                }
+                else {
+                    stockStatus = "In Stock";
+                }
                 modelProducts.addRow(new Object[]{
                         p.getMongoId(),
                         p.getName(),
@@ -204,7 +253,8 @@ public class ProductManagementPanel extends JPanel {
                         p.getStockQuantity(),
                         p.getUnit(),
                         p.getSupplierName(),
-                        p.getReorderLevel()
+                        p.getReorderLevel(),
+                        stockStatus
                 });
             }
         } catch (Exception e) {
