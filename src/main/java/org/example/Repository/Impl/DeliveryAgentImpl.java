@@ -10,6 +10,9 @@ import org.example.Repository.DeliveryAgentRepository;
 import org.example.config.DBManager;
 import org.example.model.DeliveryAgent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DeliveryAgentImpl implements DeliveryAgentRepository {
 
     private final MongoCollection<Document> collection;
@@ -83,6 +86,15 @@ public class DeliveryAgentImpl implements DeliveryAgentRepository {
             System.err.println("[DeliveryAgent] getDeliveryAgent error: " + e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public List<DeliveryAgent> getAllDeliveryAgents() {
+        List<DeliveryAgent> agents = new ArrayList<>();
+        for (Document doc : collection.find()) {
+            agents.add(mapDocToAgent(doc));
+        }
+        return agents;
     }
 
     private DeliveryAgent mapDocToAgent(Document doc) {

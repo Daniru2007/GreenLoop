@@ -4,13 +4,12 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.mongodb.client.MongoDatabase;
 import org.example.config.DBManager;
 import org.example.Repository.Impl.DeliveryAgentImpl;
+import org.example.controller.DeliveryAgentController;
 import org.example.controller.OrderService;
 import org.example.controller.ProductController;
+import org.example.controller.ReportController;
 import org.example.model.CustomerOrder;
-import org.example.ui.panels.AgentRegistrationPanel;
-import org.example.ui.panels.DeliverySchedulingPanel;
-import org.example.ui.panels.OrderProcessingPanel;
-import org.example.ui.panels.ProductManagementPanel;
+import org.example.ui.panels.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,6 +21,8 @@ public class OrderManagementGUI extends JFrame {
     private final OrderService orderService;
     private final ProductController productController;
     private final DeliveryAgentImpl agentRepo;
+    private final DeliveryAgentController agentController;
+    private final ReportController reportController;
 
     // Dashboard Stat Labels
     private JLabel lblStatPending;
@@ -33,12 +34,16 @@ public class OrderManagementGUI extends JFrame {
     private DeliverySchedulingPanel deliverySchedulingPanel;
     private AgentRegistrationPanel agentRegistrationPanel;
     private ProductManagementPanel productManagementPanel;
+    private DeliveryAgentPanel deliveryAgentPanel;
+    private ReportPanel reportPanel;
 
     public OrderManagementGUI() {
         // Initialize services
         orderService = new OrderService();
         productController = new ProductController();
         agentRepo = new DeliveryAgentImpl();
+        agentController = new DeliveryAgentController();
+        reportController = new ReportController();
 
         // Frame Setup
         setTitle("GreenLoop - Order & Delivery Management System");
@@ -68,12 +73,16 @@ public class OrderManagementGUI extends JFrame {
         deliverySchedulingPanel = new DeliverySchedulingPanel(orderService, agentRepo, refreshCallback);
         agentRegistrationPanel = new AgentRegistrationPanel(agentRepo, refreshCallback);
         productManagementPanel = new ProductManagementPanel(productController, refreshCallback);
+        deliveryAgentPanel = new DeliveryAgentPanel(agentController, refreshCallback);
+        reportPanel = new ReportPanel(reportController, refreshCallback);
 
         // Create Tabs
         tabbedPane.addTab("Order Processing", orderProcessingPanel);
         tabbedPane.addTab("Delivery & Scheduling", deliverySchedulingPanel);
-        tabbedPane.addTab("Add Delivery Agent", agentRegistrationPanel);
+//        tabbedPane.addTab("Add Delivery Agent", agentRegistrationPanel);
         tabbedPane.addTab("Product Management", productManagementPanel);
+        tabbedPane.addTab("Manage Delivery Agents", deliveryAgentPanel);
+        tabbedPane.addTab("Generate Reports", reportPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -145,6 +154,9 @@ public class OrderManagementGUI extends JFrame {
         if (orderProcessingPanel != null) orderProcessingPanel.refreshData();
         if (deliverySchedulingPanel != null) deliverySchedulingPanel.refreshData();
         if (productManagementPanel != null) productManagementPanel.refreshData();
+        if (deliveryAgentPanel != null) deliveryAgentPanel.refreshData();
+        if (reportPanel != null) reportPanel.refreshData();
+
         updateDashboardStats();
     }
 
