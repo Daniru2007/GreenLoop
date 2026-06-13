@@ -64,7 +64,14 @@ public class OrderManagementGUI extends JFrame {
         add(createHeaderPanel(), BorderLayout.NORTH);
 
         // Main Tabbed Pane
-        JTabbedPane tabbedPane = new JTabbedPane();
+        JTabbedPane tabbedPane = new JTabbedPane() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                g.setColor(new Color(43, 47, 50));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                super.paintComponent(g);
+            }
+        };
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         // Instantiate panel components and link refresh callbacks
