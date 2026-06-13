@@ -39,8 +39,8 @@ public class ProductManagementPanel extends JPanel {
 
         // LEFT FORM PANEL (Add Product)
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(new Color(46, 111, 64), 2), 
-                " Register New Product ", TitledBorder.LEFT, TitledBorder.TOP, 
+        formPanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(new Color(46, 111, 64), 2),
+                " Register New Product ", TitledBorder.LEFT, TitledBorder.TOP,
                 new Font("Segoe UI", Font.BOLD, 14), new Color(120, 220, 150)));
         formPanel.setPreferredSize(new Dimension(380, 620));
 
@@ -50,9 +50,12 @@ public class ProductManagementPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         // Row 0: Name
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Product Name:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdName = new JTextField();
         txtProdName.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdName.putClientProperty("JTextField.placeholderText", "e.g. Biodegradable Plates");
@@ -60,9 +63,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdName, gbc);
 
         // Row 1: Category
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Category:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdCategory = new JTextField();
         txtProdCategory.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdCategory.putClientProperty("JTextField.placeholderText", "e.g. Plates, Boxes");
@@ -70,9 +76,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdCategory, gbc);
 
         // Row 2: Material
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Material:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdMaterial = new JTextField();
         txtProdMaterial.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdMaterial.putClientProperty("JTextField.placeholderText", "e.g. Sugarcane Bagasse");
@@ -80,9 +89,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdMaterial, gbc);
 
         // Row 3: Price
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Unit Price (Rs):"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdPrice = new JTextField();
         txtProdPrice.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdPrice.putClientProperty("JTextField.placeholderText", "e.g. 1250.00");
@@ -90,9 +102,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdPrice, gbc);
 
         // Row 4: Initial Stock
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Initial Stock:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdStock = new JTextField();
         txtProdStock.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdStock.putClientProperty("JTextField.placeholderText", "e.g. 200");
@@ -100,9 +115,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdStock, gbc);
 
         // Row 5: Unit
-        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Unit type:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdUnit = new JTextField();
         txtProdUnit.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdUnit.putClientProperty("JTextField.placeholderText", "e.g. pack, piece, roll");
@@ -110,9 +128,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdUnit, gbc);
 
         // Row 6: Supplier
-        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Supplier Name:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdSupplier = new JTextField();
         txtProdSupplier.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdSupplier.putClientProperty("JTextField.placeholderText", "e.g. EcoSupply Co");
@@ -120,9 +141,12 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdSupplier, gbc);
 
         // Row 7: Reorder Level
-        gbc.gridx = 0; gbc.gridy = 7; gbc.weightx = 0.0;
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.weightx = 0.0;
         formPanel.add(UIStyleUtils.createStyledLabel("Reorder Level:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
         txtProdReorderLevel = new JTextField();
         txtProdReorderLevel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         txtProdReorderLevel.putClientProperty("JTextField.placeholderText", "e.g. 30");
@@ -130,7 +154,10 @@ public class ProductManagementPanel extends JPanel {
         formPanel.add(txtProdReorderLevel, gbc);
 
         // Row 8: Add Product Button
-        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
         gbc.insets = new Insets(15, 8, 8, 8);
         JButton btnAddProduct = new JButton("Register Product");
         btnAddProduct.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -145,8 +172,8 @@ public class ProductManagementPanel extends JPanel {
 
         // RIGHT PANEL (Product Table)
         JPanel tablePanel = new JPanel(new BorderLayout(10, 10));
-        tablePanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1), 
-                " Product Inventory ", TitledBorder.LEFT, TitledBorder.TOP, 
+        tablePanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(Color.GRAY, 1),
+                " Product Inventory ", TitledBorder.LEFT, TitledBorder.TOP,
                 new Font("Segoe UI", Font.BOLD, 14)));
 
         String[] columns = {"Product ID", "Name", "Category", "Material", "Price", "Stock", "Unit", "Supplier", "Reorder Level"};
@@ -175,6 +202,16 @@ public class ProductManagementPanel extends JPanel {
         btnDeleteProduct.putClientProperty("JButton.buttonType", "roundRect");
         btnDeleteProduct.addActionListener(e -> handleDeleteProduct());
         actionToolbar.add(btnDeleteProduct);
+
+
+        JButton btnUpdateProduct = new JButton("Update Product");
+        btnUpdateProduct.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnUpdateProduct.setBackground(new Color(30, 90, 160));
+        btnUpdateProduct.setForeground(Color.WHITE);
+        btnUpdateProduct.putClientProperty("JButton.buttonType", "roundRect");
+        btnUpdateProduct.addActionListener(e -> handleUpdateProduct());
+        actionToolbar.add(btnUpdateProduct);
+
 
         JButton btnRefreshProducts = new JButton("Refresh");
         btnRefreshProducts.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -222,8 +259,8 @@ public class ProductManagementPanel extends JPanel {
         String supplier = txtProdSupplier.getText().trim();
         String reorderStr = txtProdReorderLevel.getText().trim();
 
-        if (name.isEmpty() || category.isEmpty() || material.isEmpty() || priceStr.isEmpty() || 
-            stockStr.isEmpty() || unit.isEmpty() || supplier.isEmpty() || reorderStr.isEmpty()) {
+        if (name.isEmpty() || category.isEmpty() || material.isEmpty() || priceStr.isEmpty() ||
+                stockStr.isEmpty() || unit.isEmpty() || supplier.isEmpty() || reorderStr.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all product details.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -276,4 +313,72 @@ public class ProductManagementPanel extends JPanel {
             }
         }
     }
+
+    private void handleUpdateProduct() {
+        int selectedRow = tableProducts.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Select a product to update.", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String productId = modelProducts.getValueAt(selectedRow, 0).toString();
+
+        String name = txtProdName.getText().trim();
+        String category = txtProdCategory.getText().trim();
+        String material = txtProdMaterial.getText().trim();
+        String priceStr = txtProdPrice.getText().trim();
+        String stockStr = txtProdStock.getText().trim();
+        String unit = txtProdUnit.getText().trim();
+        String supplier = txtProdSupplier.getText().trim();
+        String reorderStr = txtProdReorderLevel.getText().trim();
+
+        // ✅ validation
+        if (name.isEmpty() || category.isEmpty() || material.isEmpty() ||
+                priceStr.isEmpty() || stockStr.isEmpty() || unit.isEmpty() ||
+                supplier.isEmpty() || reorderStr.isEmpty()) {
+
+            JOptionPane.showMessageDialog(this, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            // ✅ safe price parsing (handles Rs. properly)
+            String cleanPrice = priceStr.replace("Rs.", "").replace("Rs. ", "").trim();
+            double price = Double.parseDouble(cleanPrice);
+
+            int stock = Integer.parseInt(stockStr.trim());
+            int reorder = Integer.parseInt(reorderStr.trim());
+
+            if (stock < 0 || reorder < 0) {
+                JOptionPane.showMessageDialog(this, "Stock and reorder level cannot be negative.");
+                return;
+            }
+
+            Product updated = productController.updateProduct(
+                    productId,
+                    name,
+                    category,
+                    material,
+                    price,
+                    stock,
+                    unit,
+                    supplier,
+                    reorder
+            );
+            if (updated != null) {
+                JOptionPane.showMessageDialog(this, "Product updated successfully!");
+                refreshCallback.run();
+            } else {
+                JOptionPane.showMessageDialog(this, "Update failed!");
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Price, Stock, or Reorder Level has invalid format.",
+                    "Format Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
 }
+

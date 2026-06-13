@@ -27,21 +27,21 @@ public class ProductController {
     /**
      * Add a new product to inventory with initial stock
      */
-    public Product addProduct(String name, String category, String material, 
-                             double price, int initialStock, String unit, 
-                             String supplierName, int reorderLevel) {
-        return inventoryService.registerProduct(name, category, material, price, 
+    public Product addProduct(String name, String category, String material,
+                              double price, int initialStock, String unit,
+                              String supplierName, int reorderLevel) {
+        return inventoryService.registerProduct(name, category, material, price,
                 initialStock, unit, supplierName, reorderLevel);
     }
 
     /**
      * Update product details
      */
-    public Product updateProduct(String productId, String name, String category, 
-                                String material, double price, String unit,
-                                String supplierName, int reorderLevel) {
-        return inventoryService.updateProductDetails(productId, name, category, material,
-                price, unit, supplierName, reorderLevel);
+    public Product updateProduct(String productId, String name, String category, String material, double price, int stock,
+                                 String unit, String supplier, int reorderLevel) {
+        return updateProduct(productId, name, category, material, price, stock,
+                unit, supplier, reorderLevel);
+
     }
 
     /**
@@ -71,18 +71,19 @@ public class ProductController {
 
     /**
      * Process a sale - decrement stock
+     *
      * @return true if successful, false if insufficient stock
      */
     public boolean processSale(String productId, int quantity, String orderDetails) {
-        return inventoryService.processStockOut(productId, quantity, 
+        return inventoryService.processStockOut(productId, quantity,
                 "Order: " + orderDetails);
     }
 
     /**
      * Receive stock from supplier - increment inventory
      */
-    public boolean receiveStockFromSupplier(String productId, int quantity, 
-                                           String supplierName, double costPerUnit) {
+    public boolean receiveStockFromSupplier(String productId, int quantity,
+                                            String supplierName, double costPerUnit) {
         return inventoryService.stockIn(productId, quantity, supplierName, costPerUnit);
     }
 
@@ -107,10 +108,11 @@ public class ProductController {
 
     /**
      * Get reorder recommendation for a product
+     *
      * @param avgDailyUsage Expected average daily usage
-     * @param leadTimeDays Days required for supplier delivery
+     * @param leadTimeDays  Days required for supplier delivery
      */
-    public Map<String, Object> getReorderRecommendation(String productId, 
+    public Map<String, Object> getReorderRecommendation(String productId,
                                                         double avgDailyUsage,
                                                         int leadTimeDays) {
         return inventoryService.getReorderRecommendation(productId, avgDailyUsage, leadTimeDays);
@@ -134,11 +136,11 @@ public class ProductController {
         return inventoryService.getProductTransactionHistory(productId);
     }
 
+
     /**
      * Get products by supplier
      */
     public List<Product> getProductsBySupplier(String supplierName) {
         return productRepo.getProductsBySupplier(supplierName);
     }
-
 }

@@ -19,4 +19,6 @@ public interface ProductRepository {
     List<Product> getLowStockItems();
     List<Product> getProductsBySupplier(String supplierName);
     Product stockIn(String productId, int quantity, String supplierName);
+
+
 }
