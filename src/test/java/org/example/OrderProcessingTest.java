@@ -238,6 +238,62 @@ public class OrderProcessingTest {
         productController.deleteProduct(productId2);
     }
 
+    @Test
+    @Order(8)
+    void testCompleteDelivery_WithObjectIdAgentId_Success() {
+        // Register another test product
+        Product p = productController.addProduct("Test Pro", "Pro", "Wood", 10.00, 10, "piece", "Supply", 2);
+        assertNotNull(p);
+        String pid = p.getMongoId();
+
+        // Place a pending order
+        CustomerOrder order = orderService.placeOrder(pid, 2, "Test Client", LocalDate.now());
+        assertNotNull(order);
+        String oid = order.getMongoId();
+
+        // Register a test agent
+        DeliveryAgent da = new DeliveryAgent();
+        da.setName("Test Rider Obj");
+        da.setPhone("0719999991");
+        da.setEmail("riderobj@test.com");
+        da.setLicenseNumber("LK-R-1234");
+        da.setVehicleType("Bike");
+        da.setVehiclePlate("WP-XX-1112");
+        da.setVehicleModel("Yamaha");
+        da.setAvailable(true);
+        DeliveryAgent savedAgent = agentRepo.addDeliveryAgent(da);
+        assertNotNull(savedAgent);
+        String aid = savedAgent.getMongoId();
+
+        // Assign delivery agent normally
+        boolean successAssign = orderService.assignDeliveryAgent(oid, aid);
+        assertTrue(successAssign);
+
+        // Manually update the database order document's delivery_agent_id to be a BSON ObjectId instead of a String, to test legacy/alternate format support
+        com.mongodb.client.MongoDatabase db = org.example.config.DBManager.getDatabase();
+        db.getCollection("orders").updateOne(
+                com.mongodb.client.model.Filters.eq("_id", new org.bson.types.ObjectId(oid)),
+                com.mongodb.client.model.Updates.set("delivery_agent_id", new org.bson.types.ObjectId(aid))
+        );
+
+        // Complete delivery
+        boolean successDeliver = orderService.completeDelivery(oid);
+        assertTrue(successDeliver);
+
+        // Check order status
+        CustomerOrder updatedOrder = orderService.getOrderById(oid);
+        assertEquals("DELIVERED", updatedOrder.getStatus());
+
+        // Check agent availability (should be true/released!)
+        DeliveryAgent agent = agentRepo.getDeliveryAgent(aid);
+        assertTrue(agent.isAvailable(), "Agent should be released and available again even when delivery_agent_id was stored as ObjectId");
+
+        // Clean up
+        new CustomerOrderImpl().deleteOrder(oid);
+        agentRepo.deleteDeliveryAgent(aid);
+        productController.deleteProduct(pid);
+    }
+
     @AfterAll
     static void teardown() {
         // Clean up testing records

@@ -285,7 +285,16 @@ public class DeliveryAgentPanel extends JPanel {
         agent.setVehicleType(txtVehicleType.getText().trim());
         agent.setVehiclePlate(txtVehiclePlate.getText().trim());
         agent.setVehicleModel(txtVehicleModel.getText().trim());
-        agent.setAvailable(true);
+        
+        boolean isAvailable = true;
+        if (selectedMongoId != null) {
+            int selectedRow = tableAgents.getSelectedRow();
+            if (selectedRow != -1) {
+                String availStr = (String) modelAgents.getValueAt(selectedRow, 8);
+                isAvailable = "Yes".equalsIgnoreCase(availStr);
+            }
+        }
+        agent.setAvailable(isAvailable);
         return agent;
     }
 

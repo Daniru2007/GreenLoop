@@ -171,7 +171,8 @@ public class CustomerOrderImpl implements CustomerOrderRepository {
         Object id = doc.get("_id");
         o.setMongoId(id != null ? id.toString() : null);
         o.setStatus(doc.getString("status"));
-        o.setDeliveryAgentId(doc.getString("delivery_agent_id"));
+        Object agentIdObj = doc.get("delivery_agent_id");
+        o.setDeliveryAgentId(agentIdObj != null ? agentIdObj.toString() : null);
         o.setSupplierName(doc.getString("supplier_name"));
         o.setTotalAmount(doc.get("total_amount") != null ? ((Number) doc.get("total_amount")).doubleValue() : 0.0);
 
