@@ -8,8 +8,11 @@ import org.example.config.EmailConfig;
 import org.example.model.CustomerOrder;
 import org.example.model.DeliveryAgent;
 import org.example.model.OrderItem;
+import org.example.model.Product;
 
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
+import java.awt.Window.*;
+
 import javax.swing.*;
 
 public class EmailUtils {
@@ -36,7 +39,7 @@ public class EmailUtils {
                 }
             }
         } catch (Exception e) {
-            // Ignore, try direct file load
+
         }
         try {
             java.io.File file = new java.io.File("src/main/java/org/example/assets/image-removebg-preview.png");
@@ -45,7 +48,7 @@ public class EmailUtils {
                 return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(bytes);
             }
         } catch (Exception e) {
-            // Ignore
+
         }
         return "";
     }
@@ -54,7 +57,7 @@ public class EmailUtils {
         String subject = "New Delivery Assignment: Order #" + customerOrder.getMongoId();
         String body = """
                 <html>
-                                <body style="margin: 0; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6;">
+                        <body style="margin: 0; padding: 40px; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6;">
                 
                                     <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; margin: auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 
@@ -116,8 +119,6 @@ public class EmailUtils {
                                 </html>
                 """;
 
-
-
         String agentName = "Delivery Agent";
         if (customerOrder.getDeliveryAgentId() != null) {
             DeliveryAgent agent = deliveryAgentRepository.getDeliveryAgent(customerOrder.getDeliveryAgentId());
@@ -127,9 +128,9 @@ public class EmailUtils {
         }
 
         String clientName = customerOrder.getCustomerName() != null ? customerOrder.getCustomerName() : "Customer";
-        String clientEmail = "";
-        String clientAddress = "";
-        String clientPhone = "";
+        String clientEmail = customerOrder.getClient().getEmail() != null ? customerOrder.getClient().getEmail() : "N/A";
+        String clientAddress = customerOrder.getClient().getAddress() != null ? customerOrder.getClient().getAddress() : "N/A";
+        String clientPhone = customerOrder.getClient().getPhone() != null ? customerOrder.getClient().getPhone() : "N/A";
 
         if (customerOrder.getClient() != null) {
             clientName = customerOrder.getClient().getName();
@@ -279,12 +280,12 @@ public class EmailUtils {
         for (OrderItem item : customerOrder.getOrderItems()) {
             String category = "N/A";
             try {
-                org.example.model.Product p = productRepository.getProductById(item.getProductId());
+                Product p = productRepository.getProductById(item.getProductId());
                 if (p != null && p.getCategory() != null) {
                     category = p.getCategory();
                 }
             } catch (Exception e) {
-                // Ignore
+                System.out.println("Email couldn't fetch "+e.getMessage());
             }
             double totalPrice = item.getQuantity() * item.getUnitPrice();
             tblView.append("<tr>")
@@ -300,7 +301,7 @@ public class EmailUtils {
     }
 
     private static boolean shouldShowDialogs() {
-        if (java.awt.GraphicsEnvironment.isHeadless()) {
+        if (GraphicsEnvironment.isHeadless()) {
             return false;
         }
         String classPath = System.getProperty("java.class.path", "");
@@ -308,7 +309,7 @@ public class EmailUtils {
             return false;
         }
         boolean hasWindow = false;
-        for (java.awt.Window w : java.awt.Window.getWindows()) {
+        for (Window w : java.awt.Window.getWindows()) {
             if (w.isShowing()) {
                 hasWindow = true;
                 break;
