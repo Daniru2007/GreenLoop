@@ -200,17 +200,6 @@ public class DeliverySchedulingPanel extends JPanel {
                 btnAssignAgent.setText("Assign Delivery Agent");
                 if (success) {
                     JOptionPane.showMessageDialog(this, "Delivery agent assigned successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    boolean clientMail = EmailUtils.isLastEmailClientSuccess();
-                    boolean agentMail = EmailUtils.isLastEmailAgentSuccess();
-                    if (clientMail && agentMail) {
-                        JOptionPane.showMessageDialog(this, "Emails sent to client and delivery agent successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
-                    } else if (!clientMail && !agentMail) {
-                        JOptionPane.showMessageDialog(this, "Failed to send emails to client and delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
-                    } else if (!clientMail) {
-                        JOptionPane.showMessageDialog(this, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Failed to send email to delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
-                    }
                     refreshCallback.run();
                 } else {
                     JOptionPane.showMessageDialog(this, "Failed to assign agent.", "Error", JOptionPane.ERROR_MESSAGE);

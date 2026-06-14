@@ -148,6 +148,9 @@ public class OrderService {
                     auditRepo.addAuditLog(audit);
                 }
 
+                // Notify Client
+                EmailUtils.sendEmailForClient(customerEmail, savedOrder);
+
                 System.out.println("[OrderService] Order placed successfully: " + savedOrder.getMongoId() +
                         " (Total: $" + savedOrder.getTotalAmount() + ")");
             } else {

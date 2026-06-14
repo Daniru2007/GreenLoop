@@ -153,8 +153,14 @@ public class EmailUtils {
         lastEmailAgentSuccess = isSend;
         if (!isSend) {
             System.err.println("[EmailUtils] Failed to send email to delivery agent: " + recepientEmail);
+            if (shouldShowDialogs()) {
+                JOptionPane.showMessageDialog(null, "Failed to send email to delivery agent!", "Email Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else {
             System.out.println("[EmailUtils] Email sent to delivery agent successfully: " + recepientEmail);
+            if (shouldShowDialogs()) {
+                JOptionPane.showMessageDialog(null, "Email sent to delivery agent successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
     }
 
@@ -162,7 +168,20 @@ public class EmailUtils {
 
 
     public static void sendEmailForClient(String recepientEmail, CustomerOrder customerOrder) {
-        String subject = "Your order has been dispatched! ";
+        String subject;
+        String heading;
+        String messageBody;
+        
+        if (customerOrder.getStatus() == null || "PENDING".equalsIgnoreCase(customerOrder.getStatus())) {
+            subject = "Order Confirmation - Order #" + (customerOrder.getMongoId() != null ? customerOrder.getMongoId() : "N/A");
+            heading = "Your order has been placed successfully!";
+            messageBody = "Thank you for shopping with Green Loop. Your order has been received and is currently pending processing and delivery agent assignment. We will update you as soon as your order is dispatched.";
+        } else {
+            subject = "Your order has been dispatched!";
+            heading = "Your Order is on the way!";
+            messageBody = "We are pleased to inform you that your order has been dispatched and is currently in transit. You can expect your package to arrive shortly.";
+        }
+
         String body = """
         <!DOCTYPE html>
         <html>
@@ -179,9 +198,9 @@ public class EmailUtils {
         
                 <tr>
                     <td style="padding: 30px;">
-                        <h2 style="color: #224a37; margin-top: 0;">Your Order is on the way!</h2>
+                        <h2 style="color: #224a37; margin-top: 0;">%s</h2>
                         <p style="color: #555; line-height: 1.6;">Dear Customer,</p>
-                        <p style="color: #555; line-height: 1.6;">We are pleased to inform you that your order has been dispatched and is currently in transit. You can expect your package to arrive shortly.</p>
+                        <p style="color: #555; line-height: 1.6;">%s</p>
         
                         <table border="0" width="100%%" style="border-collapse: collapse; margin-bottom: 25px;">
                     <thead>
@@ -232,6 +251,8 @@ public class EmailUtils {
         String result = String.format(
                 body,
                 getLogoBase64(),
+                heading,
+                messageBody,
                 orderItemListToHtmlList(customerOrder),
                 customerOrder.getMongoId() != null ? customerOrder.getMongoId() : "N/A",
                 agentPlate
@@ -241,8 +262,14 @@ public class EmailUtils {
         lastEmailClientSuccess = isSend;
         if (!isSend) {
             System.err.println("[EmailUtils] Failed to send email to client: " + recepientEmail);
+            if (shouldShowDialogs()) {
+                JOptionPane.showMessageDialog(null, "Failed to send email to client!", "Email Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else {
             System.out.println("[EmailUtils] Email sent to client successfully: " + recepientEmail);
+            if (shouldShowDialogs()) {
+                JOptionPane.showMessageDialog(null, "Email sent to client successfully!", "Email Sent", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
     }
 
@@ -270,6 +297,24 @@ public class EmailUtils {
         }
 
         return tblView.toString();
+    }
+
+    private static boolean shouldShowDialogs() {
+        if (java.awt.GraphicsEnvironment.isHeadless()) {
+            return false;
+        }
+        String classPath = System.getProperty("java.class.path", "");
+        if (classPath.contains("junit") || classPath.contains("surefire")) {
+            return false;
+        }
+        boolean hasWindow = false;
+        for (java.awt.Window w : java.awt.Window.getWindows()) {
+            if (w.isShowing()) {
+                hasWindow = true;
+                break;
+            }
+        }
+        return hasWindow;
     }
 
 }

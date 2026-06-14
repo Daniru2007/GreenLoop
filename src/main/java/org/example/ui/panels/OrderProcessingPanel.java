@@ -64,7 +64,7 @@ public class OrderProcessingPanel extends JPanel {
         formPanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(new Color(46, 111, 64), 2), 
                 " Place Client Order ", TitledBorder.LEFT, TitledBorder.TOP, 
                 new Font("Segoe UI", Font.BOLD, 14), new Color(120, 220, 150)));
-        formPanel.setPreferredSize(new Dimension(380, 620));
+        formPanel.setPreferredSize(new Dimension(380, 680));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
@@ -167,7 +167,8 @@ public class OrderProcessingPanel extends JPanel {
         formPanel.add(lblTotalAmount, gbc);
 
         // Row 10: Add to Cart Button
-        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2; gbc.weightx = 1.0;
+        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(10, 8, 10, 8);
         JButton btnAddToCart = new JButton("Add to Cart");
         btnAddToCart.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -178,8 +179,8 @@ public class OrderProcessingPanel extends JPanel {
         btnAddToCart.addActionListener(e -> handleAddToCart());
         formPanel.add(btnAddToCart, gbc);
 
-        // Row 10: Cart Table
-        gbc.gridx = 0; gbc.gridy = 10; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 1.0;
+        // Row 11: Cart Table
+        gbc.gridx = 0; gbc.gridy = 11; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(5, 8, 5, 8);
         String[] cartColumns = {"Product ID", "Product Name", "Qty", "Unit Price", "Total"};
@@ -198,8 +199,8 @@ public class OrderProcessingPanel extends JPanel {
         scrollCart.setPreferredSize(new Dimension(340, 150));
         formPanel.add(scrollCart, gbc);
 
-        // Row 11: Cart Controls Panel
-        gbc.gridx = 0; gbc.gridy = 11; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
+        // Row 12: Cart Controls Panel
+        gbc.gridx = 0; gbc.gridy = 12; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 8, 5, 8);
         JPanel cartControlPanel = new JPanel(new BorderLayout(5, 5));
@@ -220,8 +221,8 @@ public class OrderProcessingPanel extends JPanel {
 
         formPanel.add(cartControlPanel, gbc);
 
-        // Row 12: Place Order Button
-        gbc.gridx = 0; gbc.gridy = 12; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
+        // Row 13: Place Order Button
+        gbc.gridx = 0; gbc.gridy = 13; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(15, 8, 8, 8);
         JButton btnPlaceOrder = new JButton("Place Client Order");
@@ -382,7 +383,7 @@ public class OrderProcessingPanel extends JPanel {
         }
 
         Product p = selected.getProduct();
-        lblStockAvailable.setText(p.getStockQuantity() + " " + p.getUnit() + "(s)");
+        lblStockAvailable.setText(p.getStockQuantity() + " " + p.getUnit() + " (s)");
         lblUnitPrice.setText(String.format("Rs. %.2f", p.getPrice()));
 
         int qty = (Integer) spinQuantity.getValue();
@@ -466,6 +467,25 @@ public class OrderProcessingPanel extends JPanel {
                 btnPlaceOrder.setEnabled(true);
                 btnPlaceOrder.setText("Place Client Order");
                 if (order != null) {
+                    // Auto-register new client if they do not exist
+                    try {
+                        boolean clientExists = false;
+                        java.util.List<org.example.model.Client> clients = clientController.getAllClients();
+                        if (clients != null) {
+                            for (org.example.model.Client c : clients) {
+                                if (c.getEmail() != null && c.getEmail().equalsIgnoreCase(clientEmail)) {
+                                    clientExists = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!clientExists) {
+                            clientController.addClient(clientName, clientEmail, clientPhone, clientAddress);
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("[OrderProcessingPanel] Failed to auto-register new client: " + ex.getMessage());
+                    }
+
                     JOptionPane.showMessageDialog(this, "Order placed successfully! Total: Rs. " + String.format("%.2f", order.getTotalAmount()), "Success", JOptionPane.INFORMATION_MESSAGE);
                     txtClientName.setText("");
                     txtClientEmail.setText("");
