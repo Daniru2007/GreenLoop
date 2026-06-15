@@ -12,6 +12,10 @@ import org.example.model.Product;
 
 import java.awt.*;
 import java.awt.Window.*;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.Base64;
 
 import javax.swing.*;
 
@@ -23,35 +27,9 @@ public class EmailUtils {
     private static boolean lastEmailClientSuccess = true;
     private static boolean lastEmailAgentSuccess = true;
 
-    public static boolean isLastEmailClientSuccess() {
-        return lastEmailClientSuccess;
-    }
-    public static boolean isLastEmailAgentSuccess() {
-        return lastEmailAgentSuccess;
-    }
 
-    private static String getLogoBase64() {
-        try {
-            try (java.io.InputStream is = EmailUtils.class.getResourceAsStream("/org/example/assets/image-removebg-preview.png")) {
-                if (is != null) {
-                    byte[] bytes = is.readAllBytes();
-                    return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(bytes);
-                }
-            }
-        } catch (Exception e) {
 
-        }
-        try {
-            java.io.File file = new java.io.File("src/main/java/org/example/assets/image-removebg-preview.png");
-            if (file.exists()) {
-                byte[] bytes = java.nio.file.Files.readAllBytes(file.toPath());
-                return "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(bytes);
-            }
-        } catch (Exception e) {
 
-        }
-        return "";
-    }
 
     public static void sendEmailForDeliveryAgent(String recepientEmail, CustomerOrder customerOrder) {
         String subject = "New Delivery Assignment: Order #" + customerOrder.getMongoId();
@@ -63,7 +41,7 @@ public class EmailUtils {
                 
                                         <tr>
                                             <td style="padding: 30px; text-align: center; background-color: #224a37; color: #ffffff; ">
-                                                <img src="%s" alt="Green Loop Logo" width="100" height="100">
+                                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsEgLxK_0kfat7N3EBONIZrJXYD6jnI53IYvQnZAmFK4o_Z2kisKv0YLA&s=10" alt="Green Loop Logo" width="100" height="100">
                                                 <h1 style="margin: 0; font-size: 15px; letter-spacing: 1px;">Green Loop</h1>
                                             </td>
                                         </tr>
@@ -127,21 +105,17 @@ public class EmailUtils {
             }
         }
 
+
+
         String clientName = customerOrder.getCustomerName() != null ? customerOrder.getCustomerName() : "Customer";
         String clientEmail = customerOrder.getClient().getEmail() != null ? customerOrder.getClient().getEmail() : "N/A";
         String clientAddress = customerOrder.getClient().getAddress() != null ? customerOrder.getClient().getAddress() : "N/A";
         String clientPhone = customerOrder.getClient().getPhone() != null ? customerOrder.getClient().getPhone() : "N/A";
 
-        if (customerOrder.getClient() != null) {
-            clientName = customerOrder.getClient().getName();
-            clientEmail = customerOrder.getClient().getEmail();
-            clientAddress = customerOrder.getClient().getAddress();
-            clientPhone = customerOrder.getClient().getPhone();
-        }
+
 
         String formattedBody = String.format(
                  body,
-                 getLogoBase64(),
                  agentName,
                 orderItemListToHtmlList(customerOrder),
                 clientName,
@@ -149,6 +123,7 @@ public class EmailUtils {
                 clientAddress,
                 clientPhone
         );
+
 
         boolean isSend = EmailConfig.sendEmail(recepientEmail, subject, formattedBody);
         lastEmailAgentSuccess = isSend;
@@ -172,7 +147,7 @@ public class EmailUtils {
         String subject;
         String heading;
         String messageBody;
-        
+
         if (customerOrder.getStatus() == null || "PENDING".equalsIgnoreCase(customerOrder.getStatus())) {
             subject = "Order Confirmation - Order #" + (customerOrder.getMongoId() != null ? customerOrder.getMongoId() : "N/A");
             heading = "Your order has been placed successfully!";
@@ -192,7 +167,7 @@ public class EmailUtils {
                 
                 <tr>
                     <td style="padding: 30px; text-align: center; background-color: #224a37; color: #ffffff;">
-                        <img src="%s" alt="Green Loop Logo" width="100" height="100">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsEgLxK_0kfat7N3EBONIZrJXYD6jnI53IYvQnZAmFK4o_Z2kisKv0YLA&s=10" alt="Green Loop Logo" width="100" height="100">
                         <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">Green Loop</h1>
                     </td>
                 </tr>
@@ -251,7 +226,6 @@ public class EmailUtils {
 
         String result = String.format(
                 body,
-                getLogoBase64(),
                 heading,
                 messageBody,
                 orderItemListToHtmlList(customerOrder),
@@ -309,7 +283,7 @@ public class EmailUtils {
             return false;
         }
         boolean hasWindow = false;
-        for (Window w : java.awt.Window.getWindows()) {
+        for (Window w : Window.getWindows()) {
             if (w.isShowing()) {
                 hasWindow = true;
                 break;
