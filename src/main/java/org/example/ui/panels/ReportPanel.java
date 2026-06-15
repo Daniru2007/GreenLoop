@@ -49,7 +49,7 @@ public class ReportPanel extends JPanel {
         add(createMainPanel(),    BorderLayout.CENTER);
     }
 
-    // ── Control Panel (top bar) ───────────────────────────────────────────────
+    // -- Control Panel (top bar) -----------------------------------------------
 
     private JPanel createControlPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
@@ -102,12 +102,12 @@ public class ReportPanel extends JPanel {
         return panel;
     }
 
-    // ── Main Panel (3 tables) ─────────────────────────────────────────────────
+    // -- Main Panel (3 tables) -------------------------------------------------
 
     private JPanel createMainPanel() {
         JPanel panel = new JPanel(new GridLayout(1, 3, 15, 0));
 
-        // ── Delivered Orders Table ────────────────────────────────────────────
+        // -- Delivered Orders Table --------------------------------------------
         JPanel ordersPanel = new JPanel(new BorderLayout());
         ordersPanel.setBorder(new TitledBorder(
                 BorderFactory.createLineBorder(new Color(46, 111, 64), 1),
@@ -126,7 +126,7 @@ public class ReportPanel extends JPanel {
         ordersPanel.add(new JScrollPane(tableOrders), BorderLayout.CENTER);
         panel.add(ordersPanel);
 
-        // ── Top Sellers Table ─────────────────────────────────────────────────
+        // -- Top Sellers Table -------------------------------------------------
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(new TitledBorder(
                 BorderFactory.createLineBorder(new Color(52, 120, 180), 1),
@@ -145,7 +145,7 @@ public class ReportPanel extends JPanel {
         topPanel.add(new JScrollPane(tableTopSellers), BorderLayout.CENTER);
         panel.add(topPanel);
 
-        // ── Low Stock Table ───────────────────────────────────────────────────
+        // -- Low Stock Table ---------------------------------------------------
         JPanel stockPanel = new JPanel(new BorderLayout());
         stockPanel.setBorder(new TitledBorder(
                 BorderFactory.createLineBorder(new Color(231, 76, 60), 1),
@@ -167,7 +167,7 @@ public class ReportPanel extends JPanel {
         return panel;
     }
 
-    // ── Refresh Data ──────────────────────────────────────────────────────────
+    // -- Refresh Data ----------------------------------------------------------
 
     public void refreshData() {
         int month = cmbMonth.getSelectedIndex() + 1;
@@ -248,7 +248,7 @@ public class ReportPanel extends JPanel {
         }
     }
 
-    // ── PDF Generation ────────────────────────────────────────────────────────
+    // -- PDF Generation --------------------------------------------------------
 
     private void handleGeneratePDF() {
         int month = cmbMonth.getSelectedIndex() + 1;
@@ -281,7 +281,7 @@ public class ReportPanel extends JPanel {
         }
     }
 
-    // ── UI Helpers ────────────────────────────────────────────────────────────
+    // -- UI Helpers ------------------------------------------------------------
 
     private JTable createStyledTable(DefaultTableModel model) {
         JTable table = new JTable(model);
